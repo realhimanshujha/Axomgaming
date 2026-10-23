@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AXOM GAMING | Membership Desk</title>
+  <link rel="stylesheet" href="membership.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">AX</span><span>AXOM <b>GAMING</b><small>MEMBERSHIP DESK</small></span></a>
+    <div class="top-actions"><span class="live-dot"></span><span>Admin workspace</span><a href="index.html" class="back-link">← Main dashboard</a></div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <div><p class="eyebrow">MEMBER OPERATIONS</p><h1>Membership <em>booking desk</em></h1><p class="sub">Register members, book PS5 hours, and keep every hour accounted for.</p></div>
+      <button id="refreshBtn" class="btn btn-ghost">↻ Refresh data</button>
+    </section>
+    <div id="notice" class="notice hidden" role="status"></div>
+    <section class="stats">
+      <article class="stat"><span>Total members</span><strong id="statMembers">—</strong><small>All registered members</small></article>
+      <article class="stat"><span>Active memberships</span><strong id="statActive">—</strong><small>Eligible to book</small></article>
+      <article class="stat"><span>Hours remaining</span><strong id="statHours">—</strong><small>Across all members</small></article>
+    </section>
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-head"><div><p class="eyebrow">01 / REGISTER</p><h2>Add a new member</h2></div><span class="badge">Welcome email</span></div>
+        <form id="memberForm" class="form-grid">
+          <label>Full name<input name="name" required placeholder="Member's full name"></label>
+          <label>Mobile number<input name="phone" required inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit number"></label>
+          <label class="full">Email address<input name="email" type="email" required placeholder="member@example.com"></label>
+          <label>Plan name<input name="planName" value="PS5 Membership" required></label>
+          <label>Amount paid (₹)<input name="pricePaid" type="number" min="0" step="1" value="1299" required></label>
+          <label>Total hours<input name="totalHours" type="number" min="1" step="1" value="10" required></label>
+          <label>Validity (days)<input name="validityDays" type="number" min="1" step="1" value="30" required></label>
+          <label>Maximum players<select name="maxPlayers"><option value="1">1 player</option><option value="2" selected>2 players</option><option value="3">3 players</option><option value="4">4 players</option></select></label>
+          <div class="full"><button class="btn btn-primary" type="submit">＋ Create membership</button></div>
+        </form>
+        <p class="hint">A unique Member ID is generated and a welcome email is sent to the address entered above.</p>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><p class="eyebrow">02 / BOOK</p><h2>Book for a member</h2></div><span class="badge badge-purple">PS5 only</span></div>
+        <form id="bookingForm" class="form-grid">
+          <label class="full">Find member<select id="memberSelect" name="memberId" required><option value="">Load members first…</option></select></label>
+          <div id="memberCard" class="member-card full"><span>Select a member to see their balance.</span></div>
+          <label>Booking date<input name="date" id="bookingDate" type="date" required></label>
+          <label>Start time<input type="time" id="startTime" name="startTime" step="60" required></label>
+          <label>Duration<select name="durationMinutes" required>
+            <option value="30">30 minutes</option><option value="60" selected>1 hour</option>
+            <option value="90">1 hour 30 minutes</option><option value="120">2 hours</option>
+            <option value="150">2 hours 30 minutes</option><option value="180">3 hours</option>
+            <option value="210">3 hours 30 minutes</option><option value="240">4 hours</option>
+            <option value="270">4 hours 30 minutes</option><option value="300">5 hours</option>
+            <option value="330">5 hours 30 minutes</option><option value="360">6 hours</option>
+          </select></label>
+          <label>PS5 console<select id="consoleSelect" name="consoleName" required><option value="">Loading consoles…</option></select></label>
+          <label class="full">Number of players<select name="players" id="playersSelect"><option value="1">1 player</option><option value="2" selected>2 players</option><option value="3">3 players</option><option value="4">4 players</option></select></label>
+          <div class="booking-summary full"><span>Booking length</span><strong id="durationSummary">1 hour</strong><span>Expected end time</span><strong id="endSummary">17:00</strong></div>
+          <div class="full"><button class="btn btn-primary" type="submit">Confirm booking & email member</button></div>
+        </form>
+        <p class="hint">Choose a duration in 30-minute intervals, from 30 minutes up to 6 hours. Membership hours are deducted when the booking is confirmed.</p>
+      </section>
+    </div>
+    <section class="panel members-panel">
+      <div class="panel-head"><div><p class="eyebrow">03 / MEMBERS</p><h2>Membership directory</h2></div><input id="searchMembers" class="search" placeholder="Search name, phone, Member ID…"></div>
+      <div class="table-wrap"><table><thead><tr><th>Member</th><th>Plan</th><th>Hours used</th><th>Remaining</th><th>Used today</th><th>Expiry</th><th>Status</th></tr></thead><tbody id="membersBody"><tr><td colspan="7" class="empty">Loading members…</td></tr></tbody></table></div>
+    </section>
+    <footer>AXOM GAMING <span>•</span> Train Hard. Play Better.</footer>
+  </main>
+  <script src="membership.js"></script>
+</body>
+</html>
