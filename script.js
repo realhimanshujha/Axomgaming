@@ -778,7 +778,7 @@ function renderLiveSessions() {
 
     const customer = document.createElement("p");
     customer.textContent =
-      `${session.customerName} · ${session.phone}`;
+    `${session.customerName} · ${session.phone || "Phone not provided"}`;
 
     titleArea.append(title, customer);
 
@@ -791,29 +791,37 @@ function renderLiveSessions() {
     const details = document.createElement("div");
     details.className = "session-details";
 
-    addDetail(
-      details,
-      "Players",
-      session.players
-    );
+    // Players
+    addDetail(details, "Players", session.players);
 
-    addDetail(
-      details,
-      "Start Time",
-      session.startTime
-    );
+    // Starting Time
+    const startBox = document.createElement("div");
+    startBox.className = "session-time-box starting-time";
 
-    addDetail(
-      details,
-      "Scheduled End",
-      session.endTime
-    );
+    const startLabel = document.createElement("span");
+    startLabel.textContent = "🟢 STARTING TIME";
 
-    addDetail(
-      details,
-      "Session ID",
-      session.sessionId
-    );
+    const startValue = document.createElement("strong");
+    startValue.textContent = session.startTime;
+
+    startBox.append(startLabel, startValue);
+
+    // Finishing Time
+    const endBox = document.createElement("div");
+    endBox.className = "session-time-box finishing-time";
+
+    const endLabel = document.createElement("span");
+    endLabel.textContent = "🔴 FINISHING TIME";
+
+    const endValue = document.createElement("strong");
+    endValue.textContent = session.endTime;
+
+    endBox.append(endLabel, endValue);
+
+    details.append(startBox, endBox);
+
+    // Session ID
+    addDetail(details, "Session ID", session.sessionId);
 
     const timer = document.createElement("div");
     timer.className = "session-timer";
@@ -957,7 +965,7 @@ function updateSessionTimers() {
 async function extendSession(sessionId) {
   const duration = await showPrompt(
     "Enter additional gaming time in minutes.\n" +
-    "Allowed: 30, 60, 90, 120, etc."
+    "Allowed: 15, 30, 60, 90, 120, etc."
   );
 
   if (duration === null) return;
@@ -966,14 +974,22 @@ async function extendSession(sessionId) {
 
   if (
     !Number.isInteger(addedMinutes) ||
-    addedMinutes < 30 ||
-    addedMinutes % 30 !== 0
+    addedMinutes < 15 ||
+    (addedMinutes !== 15 && addedMinutes % 30 !== 0)
   ) {
-    showToast("Enter a valid duration in 30-minute intervals.");
+    showToast(
+      "Enter 15 minutes or a duration in 30-minute intervals."
+    );
     return;
   }
 
-  if (!(await showConfirm(`Extend this session by ${addedMinutes} minutes?`, { title: "Extend session", confirmText: "Extend time" }))) {
+  if (!(await showConfirm(
+    `Extend this session by ${addedMinutes} minutes?`,
+    {
+      title: "Extend session",
+      confirmText: "Extend time"
+    }
+  ))) {
     return;
   }
 
@@ -1002,90 +1018,299 @@ async function extendSession(sessionId) {
 /* ADD SNACKS */
 
 async function addSnacksToSession(sessionId) {
+
   if (!appData.snacks.length) {
     showToast("No snacks are currently available.");
     return;
   }
 
-  const available = appData.snacks
-    .filter(item => Number(item.currentStock) > 0);
+  const available = appData.snacks.filter(
+    item => Number(item.currentStock) > 0
+  );
 
   if (!available.length) {
     showToast("All snacks are out of stock.");
     return;
   }
 
-  const menu = available.map((item, index) =>
-    `${index + 1}. ${item.snackName} — ₹${item.sellingPrice} ` +
-    `(Stock: ${item.currentStock})`
-  ).join("\n");
+  // CREATE MODAL
+  const overlay = document.createElement("div");
+  overlay.className = "snack-modal-overlay";
 
-  const choice = await showPrompt(
-    "Select a snack by entering its number:\n\n" + menu
-  );
+  const modal = document.createElement("div");
+  modal.className = "snack-modal";
 
-  if (choice === null) return;
+  // HEADER
+  const header = document.createElement("div");
+  header.className = "snack-modal-header";
 
-  const index = Number(choice) - 1;
+  const heading = document.createElement("div");
 
-  if (
-    !Number.isInteger(index) ||
-    index < 0 ||
-    index >= available.length
-  ) {
-    showToast("Invalid snack selection.");
-    return;
-  }
+  const title = document.createElement("h2");
+  title.textContent = "ADD SNACKS";
 
-  const snack = available[index];
+  const subtitle = document.createElement("p");
+  subtitle.textContent = "Select snacks to add to this gaming session.";
 
-  const quantityInput = await showPrompt(
-    `Enter quantity for ${snack.snackName}:`
-  );
+  heading.append(title, subtitle);
 
-  if (quantityInput === null) return;
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "snack-close";
+  closeBtn.textContent = "×";
 
-  const quantity = Number(quantityInput);
+  header.append(heading, closeBtn);
 
-  if (
-    !Number.isInteger(quantity) ||
-    quantity < 1 ||
-    quantity > Number(snack.currentStock)
-  ) {
-    showToast("Invalid quantity or insufficient stock.");
-    return;
-  }
+  // SEARCH BAR
+  const searchWrapper = document.createElement("div");
+  searchWrapper.className = "snack-search-wrapper";
 
-  if (!(await showConfirm(
-    `Add ${quantity} × ${snack.snackName}?\nAmount: ₹${quantity * snack.sellingPrice}`,
-    { title: "Add snacks", confirmText: "Add snacks" }
-  ))) {
-    return;
-  }
+  const searchInput = document.createElement("input");
+  searchInput.type = "search";
+  searchInput.className = "snack-search-input";
+  searchInput.placeholder = "Search snacks by name...";
+  searchInput.autocomplete = "off";
 
-  try {
-    const result = await apiRequest({
-      action: "addSessionSnacks",
-      token: sessionToken,
-      sessionId: sessionId,
+  searchWrapper.appendChild(searchInput);
 
-      snacks: [{
-        snackId: snack.snackId,
-        quantity: quantity
-      }]
+  // PRODUCT LIST
+  const productList = document.createElement("div");
+  productList.className = "snack-product-list";
+
+  // ORDER SUMMARY
+  const summary = document.createElement("div");
+  summary.className = "snack-order-summary";
+
+  const summaryLabel = document.createElement("span");
+  summaryLabel.textContent = "SELECTED SNACKS";
+
+  const summaryCount = document.createElement("strong");
+  summaryCount.textContent = "0 items";
+
+  const totalLabel = document.createElement("span");
+  totalLabel.textContent = "SNACK TOTAL";
+
+  const totalAmount = document.createElement("strong");
+  totalAmount.textContent = "₹0";
+
+  const summaryTop = document.createElement("div");
+  summaryTop.className = "snack-summary-top";
+  summaryTop.append(summaryLabel, summaryCount);
+
+  const summaryBottom = document.createElement("div");
+  summaryBottom.className = "snack-summary-bottom";
+  summaryBottom.append(totalLabel, totalAmount);
+
+  summary.append(summaryTop, summaryBottom);
+
+  // FOOTER
+  const footer = document.createElement("div");
+  footer.className = "snack-modal-footer";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "snack-cancel-btn";
+  cancelBtn.textContent = "Cancel";
+
+  const addBtn = document.createElement("button");
+  addBtn.className = "snack-add-btn";
+  addBtn.textContent = "Add to Session";
+  addBtn.disabled = true;
+
+  footer.append(cancelBtn, addBtn);
+
+  modal.append(header, searchWrapper, productList, summary, footer);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // QUANTITY TRACKER
+  const quantities = new Map();
+
+  available.forEach(snack => {
+    quantities.set(String(snack.snackId), 0);
+  });
+
+  function updateSummary() {
+
+    let count = 0;
+    let total = 0;
+
+    available.forEach(snack => {
+
+      const quantity = quantities.get(String(snack.snackId)) || 0;
+
+      count += quantity;
+
+      total += quantity * Number(snack.sellingPrice);
     });
 
-    showToast(
-      "Snacks added successfully.\n" +
-      "New total: ₹" + result.grandTotal
-    );
+    summaryCount.textContent =
+      `${count} ${count === 1 ? "item" : "items"}`;
 
-    await loadDashboard();
-    await loadLiveSessions();
+    totalAmount.textContent = "₹" + total;
 
-  } catch (error) {
-    showToast(error.message);
+    addBtn.disabled = count === 0;
+
+    addBtn.textContent = count > 0
+      ? `Add to Session · ₹${total}`
+      : "Add to Session";
   }
+
+  // CREATE PRODUCT CARDS
+  available.forEach(snack => {
+
+    const card = document.createElement("div");
+    card.className = "snack-product-card";
+
+    card.dataset.searchName = snack.snackName.toLowerCase();
+
+    const info = document.createElement("div");
+    info.className = "snack-product-info";
+
+    const name = document.createElement("h3");
+    name.textContent = snack.snackName;
+
+    const price = document.createElement("strong");
+    price.textContent = "₹" + snack.sellingPrice;
+
+    const stock = document.createElement("span");
+    stock.textContent = `${snack.currentStock} available`;
+
+    info.append(name, price, stock);
+
+    const controls = document.createElement("div");
+    controls.className = "snack-quantity-controls";
+
+    const minus = document.createElement("button");
+    minus.textContent = "−";
+    minus.type = "button";
+    minus.className = "snack-qty-btn";
+
+    const quantity = document.createElement("strong");
+    quantity.className = "snack-quantity";
+    quantity.textContent = "0";
+
+    const plus = document.createElement("button");
+    plus.textContent = "+";
+    plus.type = "button";
+    plus.className = "snack-qty-btn";
+
+    minus.disabled = true;
+
+    minus.addEventListener("click", () => {
+
+      let current = quantities.get(String(snack.snackId));
+
+      if (current > 0) {
+        current--;
+        quantities.set(String(snack.snackId), current);
+
+        quantity.textContent = current;
+        minus.disabled = current === 0;
+        plus.disabled = false;
+
+        updateSummary();
+      }
+    });
+
+    plus.addEventListener("click", () => {
+
+      let current = quantities.get(String(snack.snackId));
+
+      if (current < Number(snack.currentStock)) {
+
+        current++;
+        quantities.set(String(snack.snackId), current);
+
+        quantity.textContent = current;
+        minus.disabled = false;
+
+        plus.disabled =
+          current >= Number(snack.currentStock);
+
+        updateSummary();
+      }
+    });
+
+    controls.append(minus, quantity, plus);
+
+    card.append(info, controls);
+
+    productList.appendChild(card);
+  });
+
+  // LIVE SNACK SEARCH
+  searchInput.addEventListener("input", () => {
+
+    const query = searchInput.value.trim().toLowerCase();
+
+    productList.querySelectorAll(".snack-product-card")
+      .forEach(card => {
+
+        const name = card.dataset.searchName || "";
+
+        card.style.display = name.includes(query)
+          ? "flex"
+          : "none";
+      });
+  });
+
+  // CLOSE MODAL
+  function closeModal() {
+    overlay.remove();
+  }
+
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) {
+      closeModal();
+    }
+  });
+
+  // ADD SNACKS TO SESSION
+  addBtn.addEventListener("click", async () => {
+
+    const selectedSnacks = available
+      .map(snack => ({
+        snackId: snack.snackId,
+        quantity: quantities.get(String(snack.snackId)) || 0
+      }))
+      .filter(item => item.quantity > 0);
+
+    if (!selectedSnacks.length) return;
+
+    addBtn.disabled = true;
+    addBtn.textContent = "Adding...";
+
+    try {
+
+      const result = await apiRequest({
+        action: "addSessionSnacks",
+        token: sessionToken,
+        sessionId: sessionId,
+        snacks: selectedSnacks
+      });
+
+      closeModal();
+
+      showToast(
+        "Snacks added successfully.\n" +
+        "New total: ₹" + result.grandTotal
+      );
+
+      await loadDashboard();
+      await loadLiveSessions();
+
+    } catch (error) {
+
+      addBtn.disabled = false;
+      updateSummary();
+
+      showToast(error.message);
+    }
+  });
+
+  updateSummary();
 }
 
 

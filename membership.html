@@ -67,8 +67,31 @@
         <p class="hint">Choose a duration in 30-minute intervals, from 30 minutes up to 6 hours. Membership hours are deducted when the booking is confirmed.</p>
       </section>
     </div>
+    <section class="panel renewal-panel">
+      <div class="panel-head">
+        <div><p class="eyebrow">03 / RENEW</p><h2>Membership renewal</h2></div>
+        <span class="badge">Existing members only</span>
+      </div>
+      <form id="renewalForm" class="form-grid">
+        <label class="full">Find existing member
+          <select id="renewalMemberSelect" name="memberId" required>
+            <option value="">Load members first…</option>
+          </select>
+        </label>
+        <div id="renewalMemberCard" class="member-card full">
+          <span>Select an existing member to view their current membership.</span>
+        </div>
+        <label>Renewal plan<input name="planName" value="PS5 Membership Renewal" required></label>
+        <label>Amount paid (₹)<input name="pricePaid" type="number" min="0" step="1" value="1299" required></label>
+        <label>Additional hours<input name="totalHours" type="number" min="1" step="1" value="10" required></label>
+        <label>Validity (days)<input name="validityDays" type="number" min="1" step="1" value="30" required></label>
+        <label>Maximum players<select name="maxPlayers"><option value="1">1 player</option><option value="2" selected>2 players</option><option value="3">3 players</option><option value="4">4 players</option></select></label>
+        <div class="full"><button class="btn btn-primary" type="submit">↻ Renew membership</button></div>
+      </form>
+      <p class="hint">Renewal keeps the same Member ID and booking history. New hours are added to the member's existing balance. Validity is extended from the later of today or the current expiry date.</p>
+    </section>
     <section class="panel members-panel">
-      <div class="panel-head"><div><p class="eyebrow">03 / MEMBERS</p><h2>Membership directory</h2></div><input id="searchMembers" class="search" placeholder="Search name, phone, Member ID…"></div>
+      <div class="panel-head"><div><p class="eyebrow">04 / MEMBERS</p><h2>Membership directory</h2></div><input id="searchMembers" class="search" placeholder="Search name, phone, Member ID…"></div>
       <div class="table-wrap"><table><thead><tr><th>Member</th><th>Plan</th><th>Hours used</th><th>Remaining</th><th>Used today</th><th>Expiry</th><th>Status</th></tr></thead><tbody id="membersBody"><tr><td colspan="7" class="empty">Loading members…</td></tr></tbody></table></div>
     </section>
     <footer>AXOM GAMING <span>•</span> Train Hard. Play Better.</footer>

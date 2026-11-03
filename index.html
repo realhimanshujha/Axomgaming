@@ -95,30 +95,47 @@
         </div>
 
       <!-- CUSTOMER FORM -->
-      <section class="panel" id="new-booking">
-        <div class="panel-heading">
-          <div>
-            <h2>New Customer Booking</h2>
-            <p>Enter customer details and select gaming options.</p>
+        <section class="panel" id="new-booking">
+          <div class="panel-heading">
+            <div>
+              <h2>New Customer Booking</h2>
+              <p>Enter customer details and select gaming options.</p>
+            </div>
           </div>
-        </div>
 
-        <form id="bookingForm">
+          <form id="bookingForm" autocomplete="off">
 
-          <div class="form-grid">
+            <div class="form-grid">
 
-            <div class="field">
-              <label for="customerName">Customer Name *</label>
-              <input id="customerName" type="text"
-                     maxlength="100" required>
-            </div>
+              <div class="field">
+                <label for="customerName">Customer Name *</label>
+                <input
+                  id="customerName"
+                  type="text"
+                  maxlength="100"
+                  required
+                  autocomplete="new-password"
+                  name="booking_customer_name"
+                >
+              </div>
 
-            <div class="field">
-              <label for="phone">Phone Number *</label>
-              <input id="phone" type="tel"
-                     inputmode="numeric" maxlength="10"
-                     pattern="[0-9]{10}" required>
-            </div>
+              <div class="field">
+                <label for="phone">
+                  Phone Number
+                  <span style="color:#9298a4;font-weight:500;">(Optional)</span>
+                </label>
+
+                <input
+                  id="phone"
+                  type="tel"
+                  inputmode="numeric"
+                  maxlength="10"
+                  pattern="[0-9]{10}"
+                  title="Enter a 10-digit phone number, or leave blank."
+                  autocomplete="new-password"
+                  name="booking_customer_phone"
+                >
+              </div>
 
             <div class="field">
               <label for="bookingDate">Date *</label>
