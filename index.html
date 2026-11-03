@@ -11,7 +11,7 @@
   <!-- LOGIN PAGE -->
   <section id="loginPage" class="login-page">
     <div class="login-card">
-      <div class="logo">AXOM<span> GAMING</span></div>
+      <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
       <p class="subtitle">ADMINISTRATION PORTAL</p>
 
       <form id="loginForm">
@@ -32,30 +32,26 @@
   <section id="dashboardPage" class="dashboard-page hidden">
 
     <header class="topbar">
-      <div class="logo">AXOM<span> GAMING</span></div>
-
+      <a class="brand" href="#overview"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
       <div class="admin-controls">
         <span>ADMIN PANEL</span>
-
-        <a href="stock.html" class="secondary-button"
-          style="text-decoration:none;">
-          📦 Stock Management
-        </a>
-
-        <a href="membership.html" class="secondary-button"
-          style="text-decoration:none;">
-          Membership 
-        </a>
-
-        <button id="logoutButton" class="logout-button">
-          Logout
-        </button>
+        <button id="logoutButton" class="logout-button">Logout</button>
       </div>
     </header>
 
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="side-label">WORKSPACE</div>
+      <a class="side-link active" href="#overview"><span>▦</span> Overview</a>
+      <a class="side-link" href="#new-booking"><span>＋</span> New booking</a>
+      <a class="side-link" href="#live-sessions"><span>◉</span> Live sessions</a>
+      <div class="side-label">MANAGEMENT</div>
+      <a class="side-link" href="membership.html"><span>♙</span> Membership desk</a>
+      <a class="side-link" href="stock.html"><span>▤</span> Stock & inventory</a>
+      <div class="sidebar-bottom"><span class="online-dot"></span> System operational<small>AXOM GAMING · ADMIN</small></div>
+    </aside>
     <main class="container">
 
-      <div class="page-heading">
+      <div class="page-heading" id="overview">
         <div>
           <h1>Gaming Management</h1>
           <p>Manage customer bookings, gaming charges and snacks.</p>
@@ -99,7 +95,7 @@
         </div>
 
       <!-- CUSTOMER FORM -->
-      <section class="panel">
+      <section class="panel" id="new-booking">
         <div class="panel-heading">
           <div>
             <h2>New Customer Booking</h2>
@@ -268,7 +264,7 @@
 
       <!-- LIVE GAMING SECTION -->
 
-      <section class="panel live-panel">
+      <section class="panel live-panel" id="live-sessions">
 
         <div class="panel-heading live-heading">
           <div>

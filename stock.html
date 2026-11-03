@@ -3,492 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>AXOM GAMING | Stock Management</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: #0b0b0f;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-    }
-
-    body.modal-open {
-      overflow: hidden;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      padding: 20px 5%;
-      background: #15151c;
-      border-bottom: 1px solid #292932;
-    }
-
-    .logo {
-      font-size: 23px;
-      font-weight: bold;
-    }
-
-    .logo span {
-      color: #ef233c;
-    }
-
-    a {
-      color: #ffffff;
-      text-decoration: none;
-    }
-
-    .back-button {
-      padding: 11px 15px;
-      background: #292932;
-      border-radius: 7px;
-    }
-
-    main {
-      width: min(600px, 92%);
-      margin: 35px auto;
-    }
-
-    .card,
-    .stock-list {
-      padding: 28px;
-      background: #15151c;
-      border: 1px solid #292932;
-      border-radius: 14px;
-    }
-
-    .card h1 {
-      margin: 0 0 10px;
-      font-size: 29px;
-    }
-
-    .card h2 {
-      margin: 0 0 12px;
-      font-size: 24px;
-    }
-
-    .description {
-      margin: 0 0 28px;
-      color: #a1a1aa;
-      line-height: 1.5;
-    }
-
-    .field {
-      margin-bottom: 21px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 9px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    input,
-    select {
-      display: block;
-      width: 100%;
-      min-height: 48px;
-      padding: 13px;
-      color: #ffffff;
-      background: #0b0b0f;
-      border: 1px solid #353540;
-      border-radius: 8px;
-      outline: none;
-      font-size: 16px;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #ef233c;
-    }
-
-    button {
-      width: 100%;
-      padding: 15px;
-      color: #ffffff;
-      background: #ef233c;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: #d91b32;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    #message,
-    #editMessage {
-      margin-top: 16px;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-      font-size: 14px;
-    }
-
-    .success {
-      color: #22c55e;
-    }
-
-    .error {
-      color: #fb7185;
-    }
-
-    /* Current Stock */
-    .stock-list {
-      margin-top: 25px;
-    }
-
-    .stock-list h2 {
-      margin: 0 0 18px;
-      font-size: 21px;
-    }
-
-    .stock-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 15px 0;
-      border-bottom: 1px solid #292932;
-    }
-
-    .stock-item:last-child {
-      border-bottom: none;
-    }
-
-    .stock-item-name {
-      font-weight: bold;
-      overflow-wrap: anywhere;
-    }
-
-    .muted {
-      margin-top: 6px;
-      color: #a1a1aa;
-      font-size: 13px;
-    }
-
-    .stock-quantity {
-      text-align: right;
-      white-space: nowrap;
-      font-weight: bold;
-    }
-
-    .empty-state {
-      color: #a1a1aa;
-      line-height: 1.6;
-    }
-
-    /* Edit Stock button section */
-    .edit-stock-section {
-      margin-top: 25px;
-    }
-
-    .edit-stock-section .description {
-      margin-bottom: 20px;
-    }
-
-    /* Popup background */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(5px);
-      overflow-y: auto;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    /* Popup box */
-    .modal-box {
-      position: relative;
-      width: 100%;
-      max-width: 550px;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 30px;
-      background: #15151c;
-      border: 1px solid #353540;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-      animation: modalAppear 0.2s ease-out;
-    }
-
-    .modal-box h2 {
-      margin: 0 40px 12px 0;
-      font-size: 26px;
-    }
-
-    .modal-box .description {
-      margin-bottom: 25px;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 38px;
-      height: 38px;
-      padding: 0;
-      background: #292932;
-      border-radius: 50%;
-      font-size: 28px;
-      line-height: 38px;
-    }
-
-    .modal-close:hover {
-      background: #ef233c;
-    }
-
-    .modal-box .field {
-      margin-bottom: 20px;
-    }
-
-    .modal-box #editStockButton {
-      margin-top: 5px;
-    }
-
-    @keyframes modalAppear {
-      from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.98);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    @media (max-width: 480px) {
-      header {
-        padding: 17px 4%;
-      }
-
-      .logo {
-        font-size: 19px;
-      }
-
-      .back-button {
-        padding: 9px;
-        font-size: 13px;
-      }
-
-      main {
-        margin: 25px auto;
-      }
-
-      .card,
-      .stock-list {
-        padding: 21px;
-      }
-
-      .modal-overlay {
-        padding: 12px;
-      }
-
-      .modal-box {
-        padding: 24px 18px;
-      }
-
-      .modal-box h2 {
-        font-size: 23px;
-      }
-    }
-  </style>
+  <meta name="theme-color" content="#090b10">
+  <title>AXOM GAMING | Stock & Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stock.css">
 </head>
-
 <body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="index.html">
+        <img src="axom-logo.jpeg" alt="AXOM GAMING logo">
+        <span class="brand-copy"><strong>AXOM <b>GAMING</b></strong><small>CONTROL CENTER</small></span>
+      </a>
 
-  <header>
-    <div class="logo">AXOM<span> GAMING</span></div>
-    <a href="index.html" class="back-button">← Dashboard</a>
-  </header>
+      <div class="nav-caption">WORKSPACE</div>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span><span>Overview</span></a>
+        <a class="nav-link" href="membership.html"><span class="nav-icon">♙</span><span>Membership desk</span></a>
+        <a class="nav-link active" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span><i></i></a>
+      </nav>
 
-  <main>
-
-    <!-- ADD NEW STOCK -->
-    <section class="card">
-      <h1>📦 Add New Stock</h1>
-
-      <p class="description">
-        Enter the snack name, quantity and selling price.
-        The new product will be added to your inventory.
-      </p>
-
-      <form id="addStockForm">
-
-        <div class="field">
-          <label for="snackName">Snack Name</label>
-          <input
-            id="snackName"
-            type="text"
-            placeholder="Example: Red Bull"
-            maxlength="100"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label for="quantity">Quantity</label>
-          <input
-            id="quantity"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="Example: 12"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label for="sellingPrice">Selling Price per Packet (₹)</label>
-          <input
-            id="sellingPrice"
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="Example: 125"
-            required
-          >
-        </div>
-
-        <button id="saveButton" type="submit">
-          + ADD STOCK
-        </button>
-
-        <p id="message" aria-live="polite"></p>
-
-      </form>
-    </section>
-
-    <!-- EDIT STOCK BUTTON -->
-    <section class="card edit-stock-section">
-
-      <h2>✏️ Edit Stock</h2>
-
-      <p class="description">
-        Correct an existing snack's quantity or selling price.
-      </p>
-
-      <button type="button" id="openEditStockModal">
-        ✏️ EDIT STOCK
-      </button>
-
-    </section>
-
-    <!-- CURRENT STOCK LIST -->
-    <section class="stock-list">
-
-      <h2>📋 Current Stock</h2>
-
-      <div id="stockList" aria-live="polite">
-        <p class="empty-state">Loading stock...</p>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <span><strong>System operational</strong><small>AXOM GAMING · ADMIN</small></span>
       </div>
+    </aside>
 
-    </section>
+    <div class="main-column">
+      <header class="topbar">
+        <div class="mobile-brand">
+          <img src="axom-logo.jpeg" alt="">
+          <strong>AXOM <b>GAMING</b></strong>
+        </div>
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-sep">/</span><strong>Stock & Inventory</strong></div>
+        <a href="index.html" class="back-button"><span>←</span> Dashboard</a>
+      </header>
 
-  </main>
+      <main class="page-content">
+        <section class="page-heading">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> INVENTORY MANAGEMENT</div>
+            <h1>Stock <span>&</span> Inventory</h1>
+            <p>Keep your cafe essentials organised. Add products, monitor quantities and update prices from one place.</p>
+          </div>
+          <div class="heading-badge"><span class="status-dot"></span> LIVE INVENTORY</div>
+        </section>
 
-  <!-- EDIT STOCK POPUP -->
-  <div
-    id="editStockModal"
-    class="modal-overlay"
-    aria-hidden="true"
-  >
+        <section class="workspace-grid">
+          <section class="panel add-panel" aria-labelledby="addStockHeading">
+            <div class="panel-heading">
+              <div class="panel-icon add-icon">＋</div>
+              <div>
+                <div class="panel-kicker">PRODUCT SETUP</div>
+                <h2 id="addStockHeading">Add new stock</h2>
+                <p>Register a snack or drink in your inventory.</p>
+              </div>
+            </div>
 
-    <div
-      class="modal-box"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="editStockTitle"
-    >
+            <form id="addStockForm" class="stock-form">
+              <div class="field">
+                <label for="snackName">Product name</label>
+                <input id="snackName" type="text" placeholder="e.g. Red Bull" maxlength="100" required>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label for="quantity">Opening quantity</label>
+                  <div class="input-wrap"><input id="quantity" type="number" min="1" step="1" placeholder="e.g. 12" required><span>PACKETS</span></div>
+                </div>
+                <div class="field">
+                  <label for="sellingPrice">Selling price</label>
+                  <div class="input-wrap price-input"><span>₹</span><input id="sellingPrice" type="number" min="0.01" step="0.01" placeholder="e.g. 125" required></div>
+                </div>
+              </div>
+              <div class="form-note"><span>ⓘ</span> The product will be added to your active inventory.</div>
+              <button id="saveButton" type="submit" class="primary-button"><span>＋</span> Add product to stock</button>
+              <p id="message" aria-live="polite"></p>
+            </form>
+          </section>
 
-      <button
-        type="button"
-        id="closeEditStockModal"
-        class="modal-close"
-        aria-label="Close popup"
-      >
-        &times;
-      </button>
+          <section class="panel inventory-panel" aria-labelledby="inventoryHeading">
+            <div class="inventory-top">
+              <div>
+                <div class="panel-kicker">YOUR PRODUCTS</div>
+                <h2 id="inventoryHeading">Current inventory</h2>
+                <p>Live quantities and selling prices for active products.</p>
+              </div>
+              <div class="live-pill"><span class="status-dot"></span> LIVE</div>
+            </div>
+            <div class="inventory-column-labels"><span>PRODUCT</span><span>AVAILABLE STOCK</span></div>
+            <div id="stockList" class="stock-list" aria-live="polite">
+              <p class="empty-state">Loading inventory...</p>
+            </div>
+            <div class="inventory-footer"><span class="status-dot"></span> Inventory updates automatically after each change.</div>
+          </section>
+        </section>
 
-      <h2 id="editStockTitle">✏️ Edit Stock</h2>
+        <section class="panel edit-panel">
+          <div class="edit-copy">
+            <div class="panel-icon edit-icon">✎</div>
+            <div>
+              <div class="panel-kicker">QUICK CORRECTION</div>
+              <h2>Update existing stock</h2>
+              <p>Correct a product's available quantity or selling price.</p>
+            </div>
+          </div>
+          <button type="button" id="openEditStockModal" class="secondary-button">Edit inventory <span>↗</span></button>
+        </section>
 
-      <p class="description">
-        Select a snack and correct its quantity or selling price.
-      </p>
+        <footer class="page-footer"><span>AXOM GAMING</span><span>PLAY · COMPETE · REPEAT</span></footer>
+      </main>
+    </div>
+  </div>
 
+  <div id="editStockModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editStockHeading">
+    <div class="modal-box">
+      <button type="button" id="closeEditStockModal" class="modal-close" aria-label="Close dialog">×</button>
+      <div class="modal-kicker">INVENTORY CONTROL</div>
+      <h2 id="editStockHeading">Edit product stock</h2>
+      <p class="modal-description">Choose a product and enter its corrected stock quantity and selling price.</p>
       <form id="editStockForm">
-
         <div class="field">
-          <label for="editSnackId">Select Snack</label>
-
-          <select id="editSnackId" required>
-            <option value="">Loading snacks...</option>
-          </select>
+          <label for="editSnackId">Select product</label>
+          <select id="editSnackId" required><option value="">Loading products...</option></select>
         </div>
-
-        <div class="field">
-          <label for="editQuantity">Correct Stock Quantity</label>
-
-          <input
-            id="editQuantity"
-            type="number"
-            min="0"
-            step="1"
-            required
-          >
+        <div class="form-row">
+          <div class="field">
+            <label for="editQuantity">Correct quantity</label>
+            <input id="editQuantity" type="number" min="0" step="1" required>
+          </div>
+          <div class="field">
+            <label for="editSellingPrice">Selling price (₹)</label>
+            <input id="editSellingPrice" type="number" min="0.01" step="0.01" required>
+          </div>
         </div>
-
-        <div class="field">
-          <label for="editSellingPrice">
-            Selling Price per Packet (₹)
-          </label>
-
-          <input
-            id="editSellingPrice"
-            type="number"
-            min="0.01"
-            step="0.01"
-            required
-          >
-        </div>
-
-        <button id="editStockButton" type="submit">
-          SAVE CHANGES
-        </button>
-
+        <div class="modal-warning"><span>!</span> This sets the stock to the quantity entered; it does not add to the existing quantity.</div>
+        <button id="editStockButton" type="submit" class="primary-button">Save changes</button>
         <p id="editMessage" aria-live="polite"></p>
-
       </form>
-
     </div>
   </div>
 
   <script src="stock.js"></script>
-
 </body>
 </html>

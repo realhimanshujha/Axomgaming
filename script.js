@@ -4,7 +4,6 @@ const API_URL =
 const $ = id => document.getElementById(id);
 
 let sessionToken = sessionStorage.getItem("axomToken") || "";
-
 let appData = {
   consoles: [],
   prices: [],
@@ -39,12 +38,11 @@ async function apiRequest(payload) {
 
 
 /* =====================================
-   CUSTOM TOAST NOTIFICATIONS
+   CUSTOM TOASTS + DIALOGS
 ===================================== */
 
 function showToast(message, type = "info", duration = 3600) {
   const region = $("toastRegion");
-
   if (!region) {
     console.log(message);
     return;
@@ -55,10 +53,7 @@ function showToast(message, type = "info", duration = 3600) {
 
   const icon = document.createElement("span");
   icon.className = "app-toast-icon";
-
-  icon.textContent =
-    type === "success" ? "✓" :
-    type === "error" ? "!" : "i";
+  icon.textContent = type === "success" ? "✓" : type === "error" ? "!" : "i";
 
   const text = document.createElement("div");
   text.className = "app-toast-text";
@@ -69,29 +64,17 @@ function showToast(message, type = "info", duration = 3600) {
   close.className = "app-toast-close";
   close.setAttribute("aria-label", "Dismiss notification");
   close.textContent = "×";
-
   close.addEventListener("click", () => toast.remove());
 
   toast.append(icon, text, close);
   region.appendChild(toast);
 
-  requestAnimationFrame(() => {
-    toast.classList.add("visible");
-  });
-
+  requestAnimationFrame(() => toast.classList.add("visible"));
   window.setTimeout(() => {
     toast.classList.remove("visible");
-
-    window.setTimeout(() => {
-      toast.remove();
-    }, 220);
+    window.setTimeout(() => toast.remove(), 220);
   }, duration);
 }
-
-
-/* =====================================
-   CUSTOM DIALOGS
-===================================== */
 
 function appDialog({
   title = "Please confirm",
@@ -115,64 +98,38 @@ function appDialog({
     $("appDialogTitle").textContent = title;
     $("appDialogMessage").textContent = message;
     $("appDialogIcon").textContent = icon;
-
     confirmButton.textContent = confirmText;
     cancelButton.textContent = cancelText;
-
     confirmButton.classList.toggle("danger", danger);
     inputWrap.classList.toggle("hidden", !input);
-
     inputEl.type = inputType;
     inputEl.value = inputValue;
     inputEl.placeholder = placeholder;
-
-    cancelButton.classList.remove("hidden");
+    cancelButton.classList.toggle("hidden", false);
 
     modal.classList.remove("hidden");
     document.body.classList.add("dialog-open");
 
     let settled = false;
-
     const finish = value => {
       if (settled) return;
-
       settled = true;
-
       modal.classList.add("hidden");
       document.body.classList.remove("dialog-open");
-
       confirmButton.removeEventListener("click", onConfirm);
       cancelButton.removeEventListener("click", onCancel);
       modal.removeEventListener("click", onBackdrop);
       document.removeEventListener("keydown", onKeydown);
-
       resolve(value);
     };
-
-    const onConfirm = () => {
-      finish(input ? inputEl.value : true);
-    };
-
-    const onCancel = () => {
-      finish(input ? null : false);
-    };
-
+    const onConfirm = () => finish(input ? inputEl.value : true);
+    const onCancel = () => finish(input ? null : false);
     const onBackdrop = event => {
-      if (event.target === modal) {
-        finish(input ? null : false);
-      }
+      if (event.target === modal) finish(input ? null : false);
     };
-
     const onKeydown = event => {
-      if (event.key === "Escape") {
-        finish(input ? null : false);
-      }
-
-      if (
-        event.key === "Enter" &&
-        input &&
-        document.activeElement === inputEl
-      ) {
+      if (event.key === "Escape") finish(input ? null : false);
+      if (event.key === "Enter" && input && document.activeElement === inputEl) {
         event.preventDefault();
         finish(inputEl.value);
       }
@@ -183,12 +140,9 @@ function appDialog({
     modal.addEventListener("click", onBackdrop);
     document.addEventListener("keydown", onKeydown);
 
-    setTimeout(() => {
-      input ? inputEl.focus() : confirmButton.focus();
-    }, 40);
+    setTimeout(() => input ? inputEl.focus() : confirmButton.focus(), 40);
   });
 }
-
 
 function showConfirm(message, options = {}) {
   return appDialog({
@@ -200,7 +154,6 @@ function showConfirm(message, options = {}) {
     icon: options.danger ? "!" : "?"
   });
 }
-
 
 function showPrompt(message, options = {}) {
   return appDialog({
@@ -229,7 +182,6 @@ $("loginForm").addEventListener("submit", async event => {
 
   button.disabled = true;
   button.textContent = "LOGGING IN...";
-
   message.textContent = "";
   message.className = "message";
 
@@ -289,7 +241,6 @@ async function loadDashboard() {
 
     populateConsoles();
     populateSnacks();
-
     updateEndTime();
     updateBill();
 
@@ -354,143 +305,118 @@ function populateSnacks() {
   });
 }
 
+
 /* =====================================
-   PRICING & BILL CALCULATION
+   GAMING PRICE
 ===================================== */
 
-function getSelectedPrice() {
-  const consoleName = $("console").value;
+function getGamingAmount() {
+  const consoleItem = appData.consoles.find(item =>
+    item.consoleName === $("console").value
+  );
+
+  if (!consoleItem) return 0;
+
+  const consoleType = consoleItem.consoleType;
   const players = $("players").value;
   const duration = Number($("duration").value);
 
-  if (!consoleName || !players || !duration) {
-    return 0;
-  }
-
-  const consoleType = consoleName.startsWith("PS5")
-    ? "PS5"
-    : "PS4";
-
-  const price = appData.prices.find(item =>
+  const exactPrice = appData.prices.find(item =>
     item.consoleType === consoleType &&
-    String(item.players).toLowerCase() ===
-      String(players).toLowerCase() &&
-    Number(item.durationMinutes) === duration
+    item.players === players &&
+    item.durationMinutes === duration
   );
 
-  if (price) {
-    return Number(price.price) || 0;
-  }
+  if (exactPrice) return exactPrice.price;
 
   const hourlyPrice = appData.prices.find(item =>
     item.consoleType === consoleType &&
-    String(item.players).toLowerCase() ===
-      String(players).toLowerCase() &&
-    Number(item.durationMinutes) === 60
+    item.players === players &&
+    item.durationMinutes === 60
   );
 
-  if (hourlyPrice) {
-    return Math.round(
-      (Number(hourlyPrice.price) * duration / 60) * 100
-    ) / 100;
-  }
+  if (!hourlyPrice) return 0;
 
-  return 0;
+  return Math.round(
+    hourlyPrice.price * duration / 60
+  );
 }
 
+
+/* =====================================
+   END TIME
+===================================== */
 
 function updateEndTime() {
   const startTime = $("startTime").value;
   const duration = Number($("duration").value);
 
-  if (!startTime || !duration) {
+  if (!startTime) {
     $("endTime").value = "";
+    updateBill();
     return;
   }
 
-  const [hours, minutes] = startTime.split(":").map(Number);
+  const parts = startTime.split(":").map(Number);
 
-  const totalMinutes = hours * 60 + minutes + duration;
+  const totalMinutes =
+    parts[0] * 60 + parts[1] + duration;
 
-  const endHours = Math.floor(totalMinutes / 60);
-  const endMinutes = totalMinutes % 60;
+  if (totalMinutes > 24 * 60) {
+    $("endTime").value = "";
+    updateBill();
+    return;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
   $("endTime").value =
-    String(endHours).padStart(2, "0") + ":" +
-    String(endMinutes).padStart(2, "0");
-}
+    String(hours).padStart(2, "0") +
+    ":" +
+    String(minutes).padStart(2, "0");
 
-
-function updateBill() {
-  const gamingAmount = getSelectedPrice();
-
-  const snacksAmount = selectedSnacks.reduce(
-    (total, snack) => total + snack.quantity * snack.price,
-    0
-  );
-
-  $("gamingAmount").textContent =
-    "₹" + gamingAmount.toFixed(2);
-
-  $("snacksAmount").textContent =
-    "₹" + snacksAmount.toFixed(2);
-
-  $("grandTotal").textContent =
-    "₹" + (gamingAmount + snacksAmount).toFixed(2);
-
-  updateEndTime();
+  updateBill();
 }
 
 
 /* =====================================
-   BOOKING FORM EVENTS
-===================================== */
-
-["console", "players", "duration", "startTime"].forEach(id => {
-  $(id).addEventListener("change", updateBill);
-});
-
-
-/* =====================================
-   ADD SNACK TO BOOKING
+   SNACK MANAGEMENT
 ===================================== */
 
 $("addSnackButton").addEventListener("click", () => {
   const snackId = $("snackSelect").value;
   const quantity = Number($("snackQuantity").value);
 
-  if (!snackId) {
-    showToast("Please select a snack.", "error");
+  const snack = appData.snacks.find(item =>
+    item.snackId === snackId
+  );
+
+  if (!snack) {
+    showToast("Please select a snack.");
     return;
   }
 
   if (!Number.isInteger(quantity) || quantity < 1) {
-    showToast("Enter a valid snack quantity.", "error");
+    showToast("Enter a valid quantity.");
     return;
   }
 
-  const snack = appData.snacks.find(
-    item => String(item.snackId) === String(snackId)
+  const existing = selectedSnacks.find(item =>
+    item.snackId === snackId
   );
 
-  if (!snack) {
-    showToast("Snack not found.", "error");
-    return;
-  }
+  const existingQuantity = existing
+    ? existing.quantity
+    : 0;
 
-  if (quantity > Number(snack.currentStock)) {
-    showToast("Not enough snack stock available.", "error");
-    return;
-  }
-
-  const existing = selectedSnacks.find(
-    item => String(item.snackId) === String(snackId)
-  );
-
-  const existingQuantity = existing ? existing.quantity : 0;
-
-  if (existingQuantity + quantity > Number(snack.currentStock)) {
-    showToast("Selected quantity exceeds available stock.", "error");
+  if (
+    existingQuantity + quantity >
+    snack.currentStock
+  ) {
+    showToast(
+      `Only ${snack.currentStock} packets of ${snack.snackName} are available.`
+    );
     return;
   }
 
@@ -500,148 +426,151 @@ $("addSnackButton").addEventListener("click", () => {
     selectedSnacks.push({
       snackId: snack.snackId,
       snackName: snack.snackName,
-      quantity,
-      price: Number(snack.sellingPrice)
+      sellingPrice: snack.sellingPrice,
+      quantity: quantity
     });
   }
 
-  renderSelectedSnacks();
-  updateBill();
-
   $("snackQuantity").value = 1;
-  $("snackSelect").value = "";
+
+  renderSnackTable();
+  updateBill();
 });
 
 
-function renderSelectedSnacks() {
+function removeSnack(snackId) {
+  selectedSnacks = selectedSnacks.filter(item =>
+    item.snackId !== snackId
+  );
+
+  renderSnackTable();
+  updateBill();
+}
+
+
+function renderSnackTable() {
   const tbody = $("snackTableBody");
 
-  tbody.innerHTML = "";
+  tbody.replaceChildren();
 
   if (selectedSnacks.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="empty-state">
-          No snacks added yet.
-        </td>
-      </tr>
-    `;
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+
+    cell.colSpan = 5;
+    cell.className = "empty-state";
+    cell.textContent = "No snacks added.";
+
+    row.appendChild(cell);
+    tbody.appendChild(row);
 
     return;
   }
 
-  selectedSnacks.forEach((snack, index) => {
+  selectedSnacks.forEach(snack => {
     const row = document.createElement("tr");
 
-    row.innerHTML = `
-      <td>${escapeHTML(snack.snackName)}</td>
-      <td>${snack.quantity}</td>
-      <td>₹${(snack.quantity * snack.price).toFixed(2)}</td>
-      <td>
-        <button type="button"
-                class="remove-snack"
-                data-remove-snack="${index}">
-          Remove
-        </button>
-      </td>
-    `;
+    const values = [
+      snack.snackName,
+      `₹${snack.sellingPrice}`,
+      snack.quantity,
+      `₹${snack.sellingPrice * snack.quantity}`
+    ];
+
+    values.forEach(value => {
+      const cell = document.createElement("td");
+
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+
+    const actionCell = document.createElement("td");
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "remove-snack";
+    button.textContent = "Remove";
+
+    button.addEventListener("click", () => {
+      removeSnack(snack.snackId);
+    });
+
+    actionCell.appendChild(button);
+    row.appendChild(actionCell);
 
     tbody.appendChild(row);
   });
 }
 
 
-$("snackTableBody").addEventListener("click", event => {
-  const button = event.target.closest("[data-remove-snack]");
+/* =====================================
+   BILL CALCULATION
+===================================== */
 
-  if (!button) return;
 
-  const index = Number(button.dataset.removeSnack);
+function updateBill() {
+  const gamingAmount = getGamingAmount();
 
-  selectedSnacks.splice(index, 1);
+  const snacksAmount = selectedSnacks.reduce(
+    (sum, item) =>
+      sum + item.sellingPrice * item.quantity,
+    0
+  );
 
-  renderSelectedSnacks();
-  updateBill();
-});
+  const total = gamingAmount + snacksAmount;
 
+  $("gamingAmount").textContent =
+    `₹${gamingAmount.toFixed(2)}`;
+
+  $("snacksAmount").textContent =
+    `₹${snacksAmount.toFixed(2)}`;
+
+  $("grandTotal").textContent =
+    `₹${total.toFixed(2)}`;
+}
 
 /* =====================================
-   START LIVE SESSION WITH SNACKS
+   START LIVE SESSION
 ===================================== */
 
 $("bookingForm").addEventListener("submit", async event => {
   event.preventDefault();
 
-  const customerName = $("customerName").value.trim();
-  const phone = $("phone").value.trim();
-  const bookingDate = $("bookingDate").value;
-  const startTime = $("startTime").value;
-  const duration = Number($("duration").value);
-  const consoleName = $("console").value;
-  const players = $("players").value;
-
-  if (
-    !customerName ||
-    !phone ||
-    !bookingDate ||
-    !startTime ||
-    !duration ||
-    !consoleName ||
-    !players
-  ) {
-    showToast("Please complete all required fields.", "error");
-    return;
-  }
-
-  const gamingAmount = getSelectedPrice();
-
-  if (gamingAmount <= 0) {
-    showToast("Unable to calculate the gaming price.", "error");
-    return;
-  }
-
-  // Save the selected snacks before resetting the form.
-  const snacksToAdd = selectedSnacks.map(snack => ({
-    snackId: snack.snackId,
-    quantity: snack.quantity
-  }));
-
   const button = $("saveBookingButton");
+  const message = $("bookingMessage");
+
+  if (!$("console").value) {
+    message.textContent = "Please select a console.";
+    message.className = "message error";
+    return;
+  }
+
+  if (!$("endTime").value) {
+    message.textContent = "Please select a valid starting time.";
+    message.className = "message error";
+    return;
+  }
 
   button.disabled = true;
   button.textContent = "STARTING SESSION...";
 
-  let sessionCreated = false;
-
   try {
-    // STEP 1: Start the gaming session.
     const result = await apiRequest({
       action: "startSession",
       token: sessionToken,
-      customerName,
-      phone,
-      date: bookingDate,
-      startTime,
-      durationMinutes: duration,
-      consoleName: consoleName,
-      players
+
+      customerName: $("customerName").value.trim(),
+      phone: $("phone").value.trim(),
+
+      date: $("bookingDate").value,
+      startTime: $("startTime").value,
+
+      durationMinutes: Number($("duration").value),
+
+      consoleName: $("console").value,
+      players: $("players").value
     });
 
-    sessionCreated = true;
-
-    // STEP 2: Add selected snacks to the new session.
-    if (snacksToAdd.length > 0) {
-      button.textContent = "ADDING SNACKS...";
-
-      await apiRequest({
-        action: "addSessionSnacks",
-        token: sessionToken,
-        sessionId: result.sessionId,
-        snacks: snacksToAdd
-      });
-    }
-
-    // STEP 3: Clear the form after successful processing.
     selectedSnacks = [];
 
     $("bookingForm").reset();
@@ -649,117 +578,120 @@ $("bookingForm").addEventListener("submit", async event => {
     $("bookingDate").value =
       new Date().toLocaleDateString("en-CA");
 
-    renderSelectedSnacks();
+    renderSnackTable();
+    updateEndTime();
     updateBill();
 
-    // STEP 4: Refresh the dashboard and live session cards.
-    await loadDashboard();
+    message.textContent =
+      `Session started successfully! ID: ${result.sessionId}`;
 
-    showToast(
-      snacksToAdd.length > 0
-        ? "Gaming session started and snacks added successfully!"
-        : "Gaming session started successfully!",
-      "success"
-    );
+    message.className = "message success";
+
+    await loadDashboard();
+    await loadLiveSessions();
 
   } catch (error) {
-
-    if (sessionCreated) {
-      // The session exists, but adding snacks or refreshing
-      // the dashboard may have failed.
-      selectedSnacks = [];
-
-      $("bookingForm").reset();
-
-      $("bookingDate").value =
-        new Date().toLocaleDateString("en-CA");
-
-      renderSelectedSnacks();
-      updateBill();
-
-      try {
-        await loadDashboard();
-      } catch (refreshError) {
-        console.error("Dashboard refresh failed:", refreshError);
-      }
-
-      showToast(
-        "The gaming session was created, but a later step failed: " +
-        error.message +
-        ". Check Live Gaming before trying again.",
-        "error",
-        7000
-      );
-
-    } else {
-      showToast(error.message, "error");
-    }
+    message.textContent = error.message;
+    message.className = "message error";
 
   } finally {
     button.disabled = false;
-    button.textContent = "SAVE BOOKING";
+    button.textContent = "START SESSION";
   }
+});
+
+/* =====================================
+   FORM EVENTS
+===================================== */
+
+[
+  "console",
+  "players",
+  "duration"
+].forEach(id => {
+  $(id).addEventListener("change", updateBill);
+});
+
+[
+  "startTime",
+  "duration"
+].forEach(id => {
+  $(id).addEventListener("change", updateEndTime);
+});
+
+
+$("bookingForm").addEventListener("reset", () => {
+  selectedSnacks = [];
+
+  setTimeout(() => {
+    renderSnackTable();
+    updateEndTime();
+    updateBill();
+  }, 0);
 });
 
 
 /* =====================================
-   DAILY EARNINGS
+   LOGOUT
 ===================================== */
 
-async function loadDailySummary() {
+$("logoutButton").addEventListener("click", async () => {
   try {
-    const result = await apiRequest({
-      action: "getDailySummary",
+    await apiRequest({
+      action: "logout",
       token: sessionToken
     });
-
-    $("dailyGaming").textContent =
-      formatMoney(result.gamingRevenue);
-
-    $("dailySnacks").textContent =
-      formatMoney(result.snacksRevenue);
-
-    $("dailyTotal").textContent =
-      formatMoney(result.totalRevenue);
-
-    $("dailyCash").textContent =
-      formatMoney(result.cashRevenue);
-
-    $("dailyUPI").textContent =
-      formatMoney(result.upiRevenue);
-
-    $("dailyCustomers").textContent =
-      Number(result.customerCount || 0);
-
   } catch (error) {
-    showToast(
-      "Unable to load today's earnings: " + error.message,
-      "error"
-    );
+    console.error(error);
   }
-}
+
+  sessionStorage.removeItem("axomToken");
+
+  sessionToken = "";
+  selectedSnacks = [];
+
+  $("dashboardPage").classList.add("hidden");
+  $("loginPage").classList.remove("hidden");
+
+  $("loginForm").reset();
+});
 
 
 /* =====================================
-   FORMATTING HELPERS
+   INITIALIZATION
 ===================================== */
 
-function formatMoney(amount) {
-  return "₹" + (Number(amount) || 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  });
+if (sessionToken) {
+  loadDashboard();
 }
 
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[character]);
+async function loadDailySummary() {
+  const data = await apiRequest({
+    action: "getDailySummary",
+    token: sessionToken
+  });
+
+  const elements = {
+    dailyGaming: data.gamingRevenue,
+    dailySnacks: data.snacksRevenue,
+    dailyTotal: data.totalRevenue,
+    dailyCash: data.cashRevenue,
+    dailyUPI: data.upiRevenue,
+    dailyCustomers: data.customerCount
+  };
+
+  for (const [id, value] of Object.entries(elements)) {
+    const element = document.getElementById(id);
+
+    if (!element) {
+      console.error(`Missing HTML element: #${id}`);
+      continue;
+    }
+
+    element.textContent =
+      id === "dailyCustomers" ? value : `₹${value}`;
+  }
 }
 
 /* =====================================
@@ -767,13 +699,11 @@ function escapeHTML(value) {
 ===================================== */
 
 let liveSessions = [];
+
 let liveRefreshTimer = null;
-let countdownTimer = null;
 
 
-/* =====================================
-   LOAD ACTIVE SESSIONS
-===================================== */
+/* LOAD LIVE SESSIONS */
 
 async function loadLiveSessions() {
   try {
@@ -785,152 +715,159 @@ async function loadLiveSessions() {
     liveSessions = result.sessions || [];
 
     renderLiveSessions();
-    updateSessionTimers();
 
   } catch (error) {
-    showToast(
-      "Unable to load live sessions: " + error.message,
-      "error"
-    );
+    $("liveMessage").textContent = error.message;
+    $("liveMessage").className = "message error";
   }
 }
 
 
-/* =====================================
-   RENDER LIVE SESSION CARDS
-===================================== */
+/* RENDER LIVE SESSION CARDS */
 
 function renderLiveSessions() {
   const container = $("liveSessionsContainer");
 
-  if (!container) return;
+  container.replaceChildren();
 
-  $("activeSessionCount").textContent = liveSessions.length;
-
-  const gamingRevenue = liveSessions.reduce(
-    (sum, session) => sum + Number(session.gamingAmount || 0),
-    0
-  );
-
-  const snacksRevenue = liveSessions.reduce(
-    (sum, session) => sum + Number(session.snacksAmount || 0),
-    0
-  );
+  $("activeSessionCount").textContent =
+    liveSessions.length;
 
   $("activeGamingRevenue").textContent =
-    formatMoney(gamingRevenue);
+    "₹" + liveSessions.reduce(
+      (sum, item) => sum + Number(item.gamingAmount || 0),
+      0
+    );
 
   $("activeSnacksRevenue").textContent =
-    formatMoney(snacksRevenue);
+    "₹" + liveSessions.reduce(
+      (sum, item) => sum + Number(item.snacksAmount || 0),
+      0
+    );
 
-  if (liveSessions.length === 0) {
-    container.innerHTML = `
-      <div class="empty-live-state">
-        <h3>No Active Sessions</h3>
-        <p>New gaming sessions will appear here.</p>
-      </div>
-    `;
+  if (!liveSessions.length) {
+    const empty = document.createElement("div");
+
+    empty.className = "empty-live-state";
+
+    const heading = document.createElement("h3");
+    heading.textContent = "No Active Sessions";
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent =
+      "Start a new gaming session to see it here.";
+
+    empty.append(heading, paragraph);
+    container.appendChild(empty);
 
     return;
   }
 
-  container.innerHTML = "";
-
   liveSessions.forEach(session => {
-    const card = document.createElement("div");
+    const card = document.createElement("article");
+
     card.className = "session-card";
 
-    const total =
-      Number(session.gamingAmount || 0) +
-      Number(session.snacksAmount || 0);
+    const header = document.createElement("div");
+    header.className = "session-card-header";
 
-    card.innerHTML = `
-      <div class="session-card-header">
-        <div>
-          <h3>${escapeHTML(session.customerName)}</h3>
-          <p>${escapeHTML(session.phone)}</p>
-        </div>
+    const titleArea = document.createElement("div");
 
-        <span class="session-status">ACTIVE</span>
-      </div>
+    const title = document.createElement("h3");
+    title.textContent = session.console;
 
-      <div class="session-details">
-        <div>
-          <span>Console</span>
-          <strong>${escapeHTML(session.console)}</strong>
-        </div>
+    const customer = document.createElement("p");
+    customer.textContent =
+      `${session.customerName} · ${session.phone}`;
 
-        <div>
-          <span>Players</span>
-          <strong>${escapeHTML(session.players)}</strong>
-        </div>
+    titleArea.append(title, customer);
 
-        <div>
-          <span>Start Time</span>
-          <strong>${escapeHTML(session.startTime)}</strong>
-        </div>
+    const status = document.createElement("span");
+    status.className = "session-status";
+    status.textContent = "ACTIVE";
 
-        <div>
-          <span>Scheduled End</span>
-          <strong>${escapeHTML(session.endTime)}</strong>
-        </div>
-      </div>
+    header.append(titleArea, status);
 
-      <div class="session-timer">
-        <span>TIME REMAINING</span>
-        <strong
-          class="remaining-time"
-          data-date="${escapeHTML(session.date)}"
-          data-end="${escapeHTML(session.endTime)}"
-        >--:--:--</strong>
-      </div>
+    const details = document.createElement("div");
+    details.className = "session-details";
 
-      <div class="session-bill">
-        <div class="session-bill-row">
-          <span>Gaming</span>
-          <strong>${formatMoney(session.gamingAmount)}</strong>
-        </div>
+    addDetail(
+      details,
+      "Players",
+      session.players
+    );
 
-        <div class="session-bill-row">
-          <span>Snacks</span>
-          <strong>${formatMoney(session.snacksAmount)}</strong>
-        </div>
+    addDetail(
+      details,
+      "Start Time",
+      session.startTime
+    );
 
-        <div class="session-bill-row total">
-          <span>Running Bill</span>
-          <strong>${formatMoney(total)}</strong>
-        </div>
-      </div>
+    addDetail(
+      details,
+      "Scheduled End",
+      session.endTime
+    );
 
-      <div class="session-actions">
-        <button
-          type="button"
-          class="extend-button"
-          data-action="extend"
-          data-id="${escapeHTML(session.sessionId)}"
-        >
-          Extend Time
-        </button>
+    addDetail(
+      details,
+      "Session ID",
+      session.sessionId
+    );
 
-        <button
-          type="button"
-          class="add-snacks-button"
-          data-action="snacks"
-          data-id="${escapeHTML(session.sessionId)}"
-        >
-          Add Snacks
-        </button>
+    const timer = document.createElement("div");
+    timer.className = "session-timer";
 
-        <button
-          type="button"
-          class="end-session-button"
-          data-action="close"
-          data-id="${escapeHTML(session.sessionId)}"
-        >
-          End Session & Collect Payment
-        </button>
-      </div>
-    `;
+    const timerLabel = document.createElement("span");
+    timerLabel.textContent = "Time Remaining";
+
+    const timerValue = document.createElement("strong");
+    timerValue.className = "remaining-time";
+
+    timerValue.dataset.date = session.date;
+    timerValue.dataset.end = session.endTime;
+
+    timer.append(timerLabel, timerValue);
+
+    const bill = document.createElement("div");
+    bill.className = "session-bill";
+
+    bill.append(
+      billRow("Gaming", session.gamingAmount),
+      billRow("Snacks", session.snacksAmount),
+      billRow("Current Total", session.grandTotal, true)
+    );
+
+    const actions = document.createElement("div");
+    actions.className = "session-actions";
+
+    const extend = document.createElement("button");
+    extend.className = "extend-button";
+    extend.textContent = "Extend Time";
+
+    extend.addEventListener("click", () => {
+      extendSession(session.sessionId);
+    });
+
+    const snacks = document.createElement("button");
+    snacks.className = "add-snacks-button";
+    snacks.textContent = "Add Snacks";
+
+    snacks.addEventListener("click", () => {
+      addSnacksToSession(session.sessionId);
+    });
+
+    const finish = document.createElement("button");
+    finish.className = "end-session-button";
+    finish.textContent = "End Session & Collect Payment";
+
+    finish.addEventListener("click", () => {
+      closeSession(session.sessionId);
+    });
+
+    actions.append(extend, snacks, finish);
+
+    card.append(header, details, timer, bill, actions);
 
     container.appendChild(card);
   });
@@ -939,9 +876,41 @@ function renderLiveSessions() {
 }
 
 
-/* =====================================
-   LIVE COUNTDOWN
-===================================== */
+function addDetail(parent, label, value) {
+  const wrapper = document.createElement("div");
+
+  const caption = document.createElement("span");
+  caption.textContent = label;
+
+  const content = document.createElement("strong");
+  content.textContent = value;
+
+  wrapper.append(caption, content);
+
+  parent.appendChild(wrapper);
+}
+
+
+function billRow(label, amount, isTotal = false) {
+  const row = document.createElement("div");
+
+  row.className = isTotal
+    ? "session-bill-row total"
+    : "session-bill-row";
+
+  const caption = document.createElement("span");
+  caption.textContent = label;
+
+  const value = document.createElement("strong");
+  value.textContent = "₹" + Number(amount || 0);
+
+  row.append(caption, value);
+
+  return row;
+}
+
+
+/* REMAINING TIME */
 
 function updateSessionTimers() {
   document.querySelectorAll(".remaining-time").forEach(element => {
@@ -961,49 +930,14 @@ function updateSessionTimers() {
     const [year, month, day] = date.split("-").map(Number);
     const [hours, minutes] = endTime.split(":").map(Number);
 
-    const end = new Date(
-      year,
-      month - 1,
-      day,
-      hours,
-      minutes,
-      0
-    );
-
+    const end = new Date(year, month - 1, day, hours, minutes, 0);
     const now = new Date();
 
-    let remaining = Math.floor(
-      (end.getTime() - now.getTime()) / 1000
-    );
-
-    const card = element.closest(".session-card");
+    let remaining = Math.floor((end.getTime() - now.getTime()) / 1000);
 
     if (remaining <= 0) {
-      element.textContent = "00:00:00";
-
-      if (card) {
-        card.classList.add("overdue");
-
-        const badge = card.querySelector(".session-status");
-
-        if (badge) {
-          badge.textContent = "TIME EXCEEDED";
-          badge.classList.add("overdue-status");
-        }
-      }
-
+      element.textContent = "Time exceeded";
       return;
-    }
-
-    if (card) {
-      card.classList.remove("overdue");
-
-      const badge = card.querySelector(".session-status");
-
-      if (badge) {
-        badge.textContent = "ACTIVE";
-        badge.classList.remove("overdue-status");
-      }
     }
 
     const h = Math.floor(remaining / 3600);
@@ -1018,96 +952,76 @@ function updateSessionTimers() {
 }
 
 
-/* =====================================
-   EXTEND GAMING SESSION
-===================================== */
-
-/* =====================================
-   EXTEND GAMING SESSION
-===================================== */
+/* EXTEND SESSION */
 
 async function extendSession(sessionId) {
-  const input = await showPrompt(
-    "How many additional minutes?",
-    {
-      title: "Extend Gaming Time",
-      placeholder: "15, 30, 45, 60, 90...",
-      inputType: "number",
-      confirmText: "Continue"
-    }
+  const duration = await showPrompt(
+    "Enter additional gaming time in minutes.\n" +
+    "Allowed: 30, 60, 90, 120, etc."
   );
 
-  if (input === null) return;
+  if (duration === null) return;
 
-  const addedMinutes = Number(input);
+  const addedMinutes = Number(duration);
 
   if (
     !Number.isInteger(addedMinutes) ||
-    addedMinutes < 15 ||
-    addedMinutes % 15 !== 0
+    addedMinutes < 30 ||
+    addedMinutes % 30 !== 0
   ) {
-    showToast(
-      "Enter a valid duration in 15-minute intervals.",
-      "error"
-    );
+    showToast("Enter a valid duration in 30-minute intervals.");
     return;
   }
 
-  const confirmed = await showConfirm(
-    `Extend this session by ${addedMinutes} minutes?`,
-    {
-      title: "Extend Session",
-      confirmText: "Extend Time"
-    }
-  );
-
-  if (!confirmed) return;
+  if (!(await showConfirm(`Extend this session by ${addedMinutes} minutes?`, { title: "Extend session", confirmText: "Extend time" }))) {
+    return;
+  }
 
   try {
     const result = await apiRequest({
       action: "extendSession",
       token: sessionToken,
-      sessionId,
-      addedMinutes
+      sessionId: sessionId,
+      addedMinutes: addedMinutes
     });
 
     showToast(
-      result.message ||
-        `Session extended by ${addedMinutes} minutes. Additional charge: ₹${result.addedAmount}.`,
-      "success"
+      "Session extended successfully.\n" +
+      "New ending time: " + result.newEndTime +
+      "\nAdditional charge: ₹" + result.addedAmount
     );
 
     await loadLiveSessions();
 
   } catch (error) {
-    showToast(error.message, "error");
+    showToast(error.message);
   }
 }
 
-/* =====================================
-   ADD SNACKS TO LIVE SESSION
-===================================== */
+
+/* ADD SNACKS */
 
 async function addSnacksToSession(sessionId) {
   if (!appData.snacks.length) {
-    showToast("No snacks are available.", "error");
+    showToast("No snacks are currently available.");
     return;
   }
 
-  const menu = appData.snacks
-    .map((snack, index) =>
-      `${index + 1}. ${snack.snackName} — ₹${snack.sellingPrice} (Stock: ${snack.currentStock})`
-    )
-    .join("\n");
+  const available = appData.snacks
+    .filter(item => Number(item.currentStock) > 0);
+
+  if (!available.length) {
+    showToast("All snacks are out of stock.");
+    return;
+  }
+
+  const menu = available.map((item, index) =>
+    `${index + 1}. ${item.snackName} — ₹${item.sellingPrice} ` +
+    `(Stock: ${item.currentStock})`
+  ).join("\n");
 
   const choice = await showPrompt(
-    "Enter the snack number:\n\n" + menu,
-    {
-      title: "Add Snacks",
-      placeholder: "Enter menu number",
-      inputType: "number",
-      confirmText: "Next"
-    }
+    "Select a snack by entering its number:\n\n" + menu
   );
 
   if (choice === null) return;
@@ -1117,22 +1031,16 @@ async function addSnacksToSession(sessionId) {
   if (
     !Number.isInteger(index) ||
     index < 0 ||
-    index >= appData.snacks.length
+    index >= available.length
   ) {
-    showToast("Invalid snack selection.", "error");
+    showToast("Invalid snack selection.");
     return;
   }
 
-  const snack = appData.snacks[index];
+  const snack = available[index];
 
   const quantityInput = await showPrompt(
-    `How many packets of ${snack.snackName}?`,
-    {
-      title: "Snack Quantity",
-      placeholder: "Enter quantity",
-      inputType: "number",
-      confirmText: "Continue"
-    }
+    `Enter quantity for ${snack.snackName}:`
   );
 
   if (quantityInput === null) return;
@@ -1141,127 +1049,57 @@ async function addSnacksToSession(sessionId) {
 
   if (
     !Number.isInteger(quantity) ||
-    quantity < 1
+    quantity < 1 ||
+    quantity > Number(snack.currentStock)
   ) {
-    showToast("Enter a valid quantity.", "error");
+    showToast("Invalid quantity or insufficient stock.");
     return;
   }
 
-  if (quantity > Number(snack.currentStock)) {
-    showToast("Not enough stock available.", "error");
+  if (!(await showConfirm(
+    `Add ${quantity} × ${snack.snackName}?\nAmount: ₹${quantity * snack.sellingPrice}`,
+    { title: "Add snacks", confirmText: "Add snacks" }
+  ))) {
     return;
   }
-
-  const confirmed = await showConfirm(
-    `Add ${quantity} × ${snack.snackName}?\nAmount: ${formatMoney(quantity * Number(snack.sellingPrice))}`,
-    {
-      title: "Confirm Snack Order",
-      confirmText: "Add Snacks"
-    }
-  );
-
-  if (!confirmed) return;
 
   try {
     const result = await apiRequest({
       action: "addSessionSnacks",
       token: sessionToken,
-      sessionId,
-      snackId: snack.snackId,
-      quantity
+      sessionId: sessionId,
+
+      snacks: [{
+        snackId: snack.snackId,
+        quantity: quantity
+      }]
     });
 
     showToast(
-      result.message || "Snacks added successfully.",
-      "success"
+      "Snacks added successfully.\n" +
+      "New total: ₹" + result.grandTotal
     );
 
     await loadDashboard();
+    await loadLiveSessions();
 
   } catch (error) {
-    showToast(error.message, "error");
+    showToast(error.message);
   }
 }
 
 
-/* =====================================
-   LIVE SESSION BUTTON HANDLERS
-===================================== */
-
-$("liveSessionsContainer").addEventListener("click", async event => {
-  const button = event.target.closest("[data-action]");
-
-  if (!button) return;
-
-  const sessionId = button.dataset.id;
-  const action = button.dataset.action;
-
-  if (action === "extend") {
-    await extendSession(sessionId);
-  }
-
-  if (action === "snacks") {
-    await addSnacksToSession(sessionId);
-  }
-
-  if (action === "close") {
-    closeSession(sessionId);
-  }
-});
-
-
-/* =====================================
-   REFRESH BUTTON
-===================================== */
-
-$("refreshSessionsButton").addEventListener("click", async () => {
-  await loadLiveSessions();
-
-  showToast(
-    "Live sessions refreshed.",
-    "success"
-  );
-});
-
-
-/* =====================================
-   AUTOMATIC REFRESH
-===================================== */
-
-if (liveRefreshTimer) {
-  clearInterval(liveRefreshTimer);
-}
-
-if (countdownTimer) {
-  clearInterval(countdownTimer);
-}
-
-liveRefreshTimer = setInterval(() => {
-  if (sessionToken) {
-    loadLiveSessions();
-  }
-}, 30000);
-
-countdownTimer = setInterval(() => {
-  if (sessionToken) {
-    updateSessionTimers();
-  }
-}, 1000);
-
-/* =====================================
-   PAYMENT MODAL
-===================================== */
+/* END SESSION */
 
 let paymentSessionId = null;
 
-
 function closeSession(sessionId) {
   const session = liveSessions.find(
-    item => String(item.sessionId) === String(sessionId)
+    item => item.sessionId === sessionId
   );
 
   if (!session) {
-    showToast("Session not found.", "error");
+    showToast("Session not found.");
     return;
   }
 
@@ -1270,20 +1108,13 @@ function closeSession(sessionId) {
   $("paymentCustomer").textContent =
     `${session.customerName} | ${session.console}`;
 
-  const originalBill = Math.round(
-    (
-      Number(session.gamingAmount || 0) +
-      Number(session.snacksAmount || 0)
-    ) * 100
-  ) / 100;
-
   $("paymentOriginalBill").textContent =
-    formatMoney(originalBill);
+    "₹" + Number(session.grandTotal).toFixed(2);
 
-  $("paymentDiscount").value = "0";
-  $("paymentCash").value = "0";
-  $("paymentUPI").value = "0";
-  $("paymentOther").value = "0";
+  $("paymentDiscount").value = 0;
+  $("paymentCash").value = 0;
+  $("paymentUPI").value = 0;
+  $("paymentOther").value = 0;
 
   $("paymentError").textContent = "";
 
@@ -1293,24 +1124,17 @@ function closeSession(sessionId) {
 }
 
 
-/* =====================================
-   CALCULATE PAYMENT
-===================================== */
-
 function calculatePayment() {
   if (!paymentSessionId) return;
 
   const session = liveSessions.find(
-    item => String(item.sessionId) === String(paymentSessionId)
+    item => item.sessionId === paymentSessionId
   );
 
   if (!session) return;
 
   const originalBill = Math.round(
-    (
-      Number(session.gamingAmount || 0) +
-      Number(session.snacksAmount || 0)
-    ) * 100
+    Number(session.grandTotal) * 100
   );
 
   const discount = Math.round(
@@ -1334,16 +1158,21 @@ function calculatePayment() {
   const due = finalBill - totalReceived;
 
   $("paymentFinalBill").textContent =
-    formatMoney(finalBill / 100);
+    "₹" + (finalBill / 100).toFixed(2);
 
   $("paymentTotalReceived").textContent =
-    formatMoney(totalReceived / 100);
+    "₹" + (totalReceived / 100).toFixed(2);
 
   $("paymentDue").textContent =
-    formatMoney(Math.max(due, 0) / 100);
+    "₹" + (Math.max(due, 0) / 100).toFixed(2);
 
-  const valid =
-    [discount, cash, upi, other].every(Number.isFinite) &&
+  const valid = [
+    originalBill,
+    discount,
+    cash,
+    upi,
+    other
+  ].every(Number.isFinite) &&
     discount >= 0 &&
     discount <= originalBill &&
     cash >= 0 &&
@@ -1359,10 +1188,7 @@ function calculatePayment() {
 }
 
 
-/* =====================================
-   LIVE PAYMENT CALCULATIONS
-===================================== */
-
+// Update calculations while typing
 [
   "paymentDiscount",
   "paymentCash",
@@ -1373,20 +1199,14 @@ function calculatePayment() {
 });
 
 
-/* =====================================
-   CANCEL PAYMENT
-===================================== */
-
+// Cancel payment
 $("cancelPaymentButton").addEventListener("click", () => {
   $("paymentModal").classList.add("hidden");
   paymentSessionId = null;
 });
 
 
-/* =====================================
-   CONFIRM PAYMENT AND CLOSE SESSION
-===================================== */
-
+// Confirm payment and close session
 $("confirmPaymentButton").addEventListener("click", async () => {
   if (!paymentSessionId) return;
 
@@ -1404,54 +1224,23 @@ $("confirmPaymentButton").addEventListener("click", async () => {
   const otherPaid = Number($("paymentOther").value || 0);
 
   const session = liveSessions.find(
-    item => String(item.sessionId) === String(sessionId)
+    item => item.sessionId === sessionId
   );
 
   if (!session) {
-    showToast("Session not found.", "error");
+    showToast("Session not found.");
     return;
   }
 
-  const originalBill = Math.round(
-    (
-      Number(session.gamingAmount || 0) +
-      Number(session.snacksAmount || 0)
-    ) * 100
-  ) / 100;
+  const finalBill = session.grandTotal - discount;
+  const totalPaid = cashPaid + upiPaid + otherPaid;
+  const due = Math.round((finalBill - totalPaid) * 100) / 100;
 
-  const finalBill = Math.round(
-    (originalBill - discount) * 100
-  ) / 100;
+  const confirmation = due > 0
+    ? `Close session with ₹${due.toFixed(2)} outstanding due?`
+    : "Confirm payment and close this session?";
 
-  const totalPaid = Math.round(
-    (cashPaid + upiPaid + otherPaid) * 100
-  ) / 100;
-
-  const due = Math.round(
-    (finalBill - totalPaid) * 100
-  ) / 100;
-
-  const confirmationMessage =
-    `Original Bill: ${formatMoney(originalBill)}\n` +
-    `Discount: ${formatMoney(discount)}\n` +
-    `Final Bill: ${formatMoney(finalBill)}\n` +
-    `Cash: ${formatMoney(cashPaid)}\n` +
-    `UPI: ${formatMoney(upiPaid)}\n` +
-    `Other: ${formatMoney(otherPaid)}\n` +
-    `Total Received: ${formatMoney(totalPaid)}\n` +
-    `Outstanding Due: ${formatMoney(due)}\n\n` +
-    "Confirm session closure?";
-
-  const confirmed = await showConfirm(
-    confirmationMessage,
-    {
-      title: "Review Final Bill",
-      confirmText: "Close Session",
-      danger: due > 0
-    }
-  );
-
-  if (!confirmed) return;
+  if (!(await showConfirm(confirmation, { title: "Confirm session closure", confirmText: "Close session", danger: due > 0 }))) return;
 
   button.disabled = true;
   button.textContent = "PROCESSING...";
@@ -1460,98 +1249,57 @@ $("confirmPaymentButton").addEventListener("click", async () => {
     const result = await apiRequest({
       action: "closeSession",
       token: sessionToken,
-      sessionId,
-      discount,
-      cashPaid,
-      upiPaid,
-      otherPaid
+      sessionId: sessionId,
+      discount: discount,
+      cashPaid: cashPaid,
+      upiPaid: upiPaid,
+      otherPaid: otherPaid
     });
 
     $("paymentModal").classList.add("hidden");
     paymentSessionId = null;
 
     showToast(
-      result.message ||
-        `Session closed. Due: ${formatMoney(result.dueAmount)}`,
-      "success",
-      5000
+      "Session completed successfully!\n" +
+      "Final Bill: ₹" + result.finalBill + "\n" +
+      "Total Received: ₹" + result.totalPaid + "\n" +
+      "Outstanding Due: ₹" + result.dueAmount
     );
 
     await loadDashboard();
 
   } catch (error) {
     $("paymentError").textContent = error.message;
-
-    showToast(
-      "Unable to close session: " + error.message,
-      "error"
-    );
-
   } finally {
     button.disabled = false;
     button.textContent = "Collect Payment & End Session";
   }
 });
 
+/* MANUAL REFRESH */
 
-/* =====================================
-   LOGOUT
-===================================== */
-
-$("logoutButton").addEventListener("click", async () => {
-  const confirmed = await showConfirm(
-    "Are you sure you want to log out?",
-    {
-      title: "Logout",
-      confirmText: "Logout",
-      danger: true
-    }
-  );
-
-  if (!confirmed) return;
-
-  try {
-    await apiRequest({
-      action: "logout",
-      token: sessionToken
-    });
-
-  } catch (error) {
-    console.warn("Logout request failed:", error.message);
-
-  } finally {
-    sessionStorage.removeItem("axomToken");
-
-    sessionToken = "";
-    liveSessions = [];
-    selectedSnacks = [];
-
-    if (liveRefreshTimer) {
-      clearInterval(liveRefreshTimer);
-      liveRefreshTimer = null;
-    }
-
-    if (countdownTimer) {
-      clearInterval(countdownTimer);
-      countdownTimer = null;
-    }
-
-    $("dashboardPage").classList.add("hidden");
-    $("loginPage").classList.remove("hidden");
-
-    $("loginForm").reset();
-
-    showToast("You have been logged out.", "success");
-  }
-});
+$("refreshSessionsButton").addEventListener(
+  "click",
+  loadLiveSessions
+);
 
 
-/* =====================================
-   INITIAL PAGE SETUP
-===================================== */
+/* AUTOMATIC REFRESH */
 
-renderSelectedSnacks();
-
-if (sessionToken) {
-  loadDashboard();
+if (liveRefreshTimer) {
+  clearInterval(liveRefreshTimer);
 }
+
+// Update countdown every second
+liveRefreshTimer = setInterval(() => {
+  if (sessionToken) {
+    updateSessionTimers();
+  }
+}, 1000);
+
+// Refresh session data from Google Sheets every 30 seconds
+setInterval(() => {
+  if (sessionToken) {
+    loadLiveSessions();
+  }
+}, 30000);

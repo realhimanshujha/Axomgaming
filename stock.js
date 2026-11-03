@@ -1,47 +1,17 @@
-
-// ========================================
-// AXOM GAMING - STOCK MANAGEMENT
-// ========================================
-
 const STOCK_API_URL =
   "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
 const stockToken = sessionStorage.getItem("axomToken");
 
-// Add Stock elements
 const form = document.getElementById("addStockForm");
 const saveButton = document.getElementById("saveButton");
 const message = document.getElementById("message");
 const stockList = document.getElementById("stockList");
 
-// Edit Stock elements
-const editStockModal = document.getElementById("editStockModal");
-const openEditStockModal =
-  document.getElementById("openEditStockModal");
-const closeEditStockModal =
-  document.getElementById("closeEditStockModal");
-
-const editForm = document.getElementById("editStockForm");
-const editSelect = document.getElementById("editSnackId");
-const editQuantity = document.getElementById("editQuantity");
-const editSellingPrice = document.getElementById("editSellingPrice");
-const editStockButton = document.getElementById("editStockButton");
-const editMessage = document.getElementById("editMessage");
-
-
-// ========================================
-// MESSAGE HELPER
-// ========================================
-
-function showMessage(element, text, type) {
-  element.textContent = text;
-  element.className = type || "";
+function showMessage(text, type) {
+  message.textContent = text;
+  message.className = type;
 }
-
-
-// ========================================
-// API REQUEST
-// ========================================
 
 async function stockRequest(payload) {
   const response = await fetch(STOCK_API_URL, {
@@ -62,150 +32,96 @@ async function stockRequest(payload) {
   return result;
 }
 
-
-// ========================================
-// SAFE TEXT ELEMENT HELPER
-// ========================================
-
-function addTextCell(parent, text, className = "") {
-  const element = document.createElement("div");
-
+function addTextCell(parent, text, tag = "div") {
+  const element = document.createElement(tag);
   element.textContent = text;
-
-  if (className) {
-    element.className = className;
-  }
-
   parent.appendChild(element);
-
   return element;
 }
 
-
-// ========================================
-// LOAD CURRENT STOCK
-// ========================================
-
 async function loadCurrentStock() {
-  if (!stockToken) {
-    stockList.textContent =
-      "Please log in through the admin dashboard first.";
-
-    return;
-  }
-
   try {
-    const previousSelection = editSelect.value;
-
     const result = await stockRequest({
       action: "getStockManagementData",
       token: stockToken
     });
 
-    const products = (result.stock || []).filter(
-      product => product.active === true ||
-        String(product.active).toLowerCase() === "true"
-    );
-
-    // Update the stock list
     stockList.replaceChildren();
 
-    if (products.length === 0) {
-      const emptyMessage = document.createElement("p");
+    const editSelect = document.getElementById("editSnackId");
+    const previousSelection = editSelect.value;
 
-      emptyMessage.className = "empty-state";
-      emptyMessage.textContent = "No products added yet.";
-
-      stockList.appendChild(emptyMessage);
-    } else {
-      products.forEach(product => {
-        const row = document.createElement("div");
-        row.className = "stock-item";
-
-        const left = document.createElement("div");
-
-        addTextCell(
-          left,
-          product.snackName,
-          "stock-item-name"
-        );
-
-        addTextCell(
-          left,
-          `${product.snackId} · ₹${product.sellingPrice} each`,
-          "muted"
-        );
-
-        const right = document.createElement("div");
-
-        right.className = "stock-quantity";
-        right.textContent = `${product.currentStock} packets`;
-
-        row.append(left, right);
-
-        stockList.appendChild(row);
-      });
-    }
-
-    // Update the Edit Stock dropdown
     editSelect.replaceChildren();
 
     const placeholder = document.createElement("option");
-
     placeholder.value = "";
     placeholder.textContent = "Select a snack";
-
     editSelect.appendChild(placeholder);
 
-    products.forEach(product => {
-      const option = document.createElement("option");
+    (result.stock || []).forEach(product => {
+    if (!product.active) return;
 
-      option.value = product.snackId;
-      option.textContent = product.snackName;
+    const option = document.createElement("option");
+    option.value = product.snackId;
+    option.textContent = product.snackName;
 
-      option.dataset.quantity = product.currentStock;
-      option.dataset.price = product.sellingPrice;
+    option.dataset.quantity = product.currentStock;
+    option.dataset.price = product.sellingPrice;
 
-      editSelect.appendChild(option);
+    editSelect.appendChild(option);
     });
 
-    // Preserve the previously selected snack when possible
-    const selectionExists = Array.from(editSelect.options).some(
-      option => option.value === previousSelection
-    );
-
-    if (selectionExists) {
-      editSelect.value = previousSelection;
+    if ([...editSelect.options].some(
+    option => option.value === previousSelection
+    )) {
+    editSelect.value = previousSelection;
     }
 
     updateEditFields();
 
+    const products = (result.stock || [])
+      .filter(product => product.active);
+
+    if (products.length === 0) {
+      stockList.textContent = "No products added yet.";
+      return;
+    }
+
+    products.forEach(product => {
+      const row = document.createElement("div");
+      row.className = "stock-item";
+
+      const left = document.createElement("div");
+
+      addTextCell(left, product.snackName);
+
+      const details = document.createElement("div");
+      details.className = "muted";
+      details.textContent = `${product.snackId} · ₹${product.sellingPrice} each`;
+
+      left.appendChild(details);
+
+      const right = document.createElement("div");
+      right.style.textAlign = "right";
+      right.textContent = `${product.currentStock} packets`;
+
+      row.append(left, right);
+      stockList.appendChild(row);
+    });
+
   } catch (error) {
     stockList.textContent = error.message;
-
-    showMessage(
-      editMessage,
-      error.message,
-      "error"
-    );
   }
 }
-
-
-// ========================================
-// ADD NEW STOCK
-// ========================================
 
 form.addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!stockToken) {
     showMessage(
-      message,
       "Your admin session has expired. Return to the dashboard and log in again.",
       "error"
     );
-
     return;
   }
 
@@ -219,17 +135,17 @@ form.addEventListener("submit", async event => {
     Number(document.getElementById("sellingPrice").value);
 
   if (!snackName) {
-    showMessage(message, "Enter a snack name.", "error");
+    showMessage("Enter a snack name.", "error");
     return;
   }
 
   if (!Number.isInteger(quantity) || quantity < 1) {
-    showMessage(message, "Enter a valid quantity.", "error");
+    showMessage("Enter a valid quantity.", "error");
     return;
   }
 
   if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-    showMessage(message, "Enter a valid selling price.", "error");
+    showMessage("Enter a valid selling price.", "error");
     return;
   }
 
@@ -240,13 +156,12 @@ form.addEventListener("submit", async event => {
     const result = await stockRequest({
       action: "addNewSnack",
       token: stockToken,
-      snackName: snackName,
-      quantity: quantity,
-      sellingPrice: sellingPrice
+      snackName,
+      quantity,
+      sellingPrice
     });
 
     showMessage(
-      message,
       `${result.message} ${result.snackName} added with ` +
       `${result.quantity} packets at ₹${result.sellingPrice} each.`,
       "success"
@@ -257,7 +172,7 @@ form.addEventListener("submit", async event => {
     await loadCurrentStock();
 
   } catch (error) {
-    showMessage(message, error.message, "error");
+    showMessage(error.message, "error");
 
   } finally {
     saveButton.disabled = false;
@@ -265,195 +180,141 @@ form.addEventListener("submit", async event => {
   }
 });
 
-
-// ========================================
-// EDIT STOCK FIELD AUTO-FILL
-// ========================================
-
-function updateEditFields() {
-  const option = editSelect.options[editSelect.selectedIndex];
-
-  if (option && option.value) {
-    editQuantity.value = option.dataset.quantity || "";
-    editSellingPrice.value = option.dataset.price || "";
-  } else {
-    editQuantity.value = "";
-    editSellingPrice.value = "";
-  }
+if (!stockToken) {
+  showMessage(
+    "Please log in through the admin dashboard first.",
+    "error"
+  );
+} else {
+  loadCurrentStock();
 }
 
-editSelect.addEventListener("change", updateEditFields);
+function updateEditFields() {
+  const select = document.getElementById("editSnackId");
+  const option = select.options[select.selectedIndex];
 
+  document.getElementById("editQuantity").value =
+    option && option.value ? option.dataset.quantity : "";
 
-// ========================================
-// OPEN AND CLOSE EDIT STOCK MODAL
-// ========================================
+  document.getElementById("editSellingPrice").value =
+    option && option.value ? option.dataset.price : "";
+}
+
+document.getElementById("editSnackId").addEventListener(
+  "change",
+  updateEditFields
+);
+
+document.getElementById("editStockForm").addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    const select = document.getElementById("editSnackId");
+    const button = document.getElementById("editStockButton");
+    const message = document.getElementById("editMessage");
+
+    const snackId = select.value;
+    const quantity = Number(
+      document.getElementById("editQuantity").value
+    );
+    const sellingPrice = Number(
+      document.getElementById("editSellingPrice").value
+    );
+
+    if (!snackId) {
+      message.textContent = "Please select a snack.";
+      message.className = "error";
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      message.textContent = "Enter a valid stock quantity.";
+      message.className = "error";
+      return;
+    }
+
+    if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
+      message.textContent = "Enter a valid selling price.";
+      message.className = "error";
+      return;
+    }
+
+    const confirmed = confirm(
+      "Save these changes?\n\n" +
+      "Stock will be SET to " + quantity +
+      " packets, not increased by that amount."
+    );
+
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = "SAVING...";
+
+    try {
+      const result = await stockRequest({
+        action: "editSnackStock",
+        token: stockToken,
+        snackId: snackId,
+        quantity: quantity,
+        sellingPrice: sellingPrice
+      });
+
+      message.textContent =
+        result.message + " " + result.snackName +
+        ": " + result.quantity + " packets.";
+
+      message.className = "success";
+
+      closeStockModal();
+        await loadCurrentStock();   
+
+      await loadCurrentStock();
+
+    } catch (error) {
+      message.textContent = error.message;
+      message.className = "error";
+
+    } finally {
+      button.disabled = false;
+      button.textContent = "SAVE CHANGES";
+    }
+  }
+);
+
+// Edit Stock Modal
+const editStockModal = document.getElementById("editStockModal");
+const openEditStockModal = document.getElementById("openEditStockModal");
+const closeEditStockModal = document.getElementById("closeEditStockModal");
 
 function openStockModal() {
   editStockModal.classList.add("active");
-  editStockModal.setAttribute("aria-hidden", "false");
-
   document.body.classList.add("modal-open");
-
-  showMessage(editMessage, "", "");
-
-  // Put keyboard focus on the snack dropdown
-  editSelect.focus();
 }
 
 function closeStockModal() {
   editStockModal.classList.remove("active");
-  editStockModal.setAttribute("aria-hidden", "true");
-
   document.body.classList.remove("modal-open");
 }
 
-openEditStockModal.addEventListener("click", async () => {
+openEditStockModal.addEventListener("click", () => {
   openStockModal();
-
-  // Refresh products whenever the popup opens
-  await loadCurrentStock();
 });
 
-closeEditStockModal.addEventListener("click", closeStockModal);
-
+closeEditStockModal.addEventListener("click", () => {
+  closeStockModal();
+});
 
 // Close when clicking outside the popup
-editStockModal.addEventListener("click", event => {
+editStockModal.addEventListener("click", (event) => {
   if (event.target === editStockModal) {
     closeStockModal();
   }
 });
 
-
-// Close with Escape key
-document.addEventListener("keydown", event => {
-  if (
-    event.key === "Escape" &&
-    editStockModal.classList.contains("active")
-  ) {
+// Close when pressing Escape
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && editStockModal.classList.contains("active")) {
     closeStockModal();
   }
 });
-
-
-// ========================================
-// SAVE EDITED STOCK
-// ========================================
-
-editForm.addEventListener("submit", async event => {
-  event.preventDefault();
-
-  if (!stockToken) {
-    showMessage(
-      editMessage,
-      "Your admin session has expired. Please log in again.",
-      "error"
-    );
-
-    return;
-  }
-
-  const snackId = editSelect.value;
-  const quantity = Number(editQuantity.value);
-  const sellingPrice = Number(editSellingPrice.value);
-
-  if (!snackId) {
-    showMessage(
-      editMessage,
-      "Please select a snack.",
-      "error"
-    );
-
-    return;
-  }
-
-  if (!Number.isInteger(quantity) || quantity < 0) {
-    showMessage(
-      editMessage,
-      "Enter a valid stock quantity.",
-      "error"
-    );
-
-    return;
-  }
-
-  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-    showMessage(
-      editMessage,
-      "Enter a valid selling price.",
-      "error"
-    );
-
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Save these changes?\n\n" +
-    "The stock quantity will be SET to " +
-    quantity +
-    " packets, not increased by that amount."
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  editStockButton.disabled = true;
-  editStockButton.textContent = "SAVING...";
-
-  try {
-    const result = await stockRequest({
-      action: "editSnackStock",
-      token: stockToken,
-      snackId: snackId,
-      quantity: quantity,
-      sellingPrice: sellingPrice
-    });
-
-    showMessage(
-      editMessage,
-      `${result.message} ${result.snackName}: ` +
-      `${result.quantity} packets.`,
-      "success"
-    );
-
-    // Refresh the inventory once, then close the popup
-    await loadCurrentStock();
-
-    closeStockModal();
-
-    showMessage(
-      message,
-      `${result.snackName} updated successfully. ` +
-      `Stock: ${result.quantity} packets.`,
-      "success"
-    );
-
-  } catch (error) {
-    showMessage(editMessage, error.message, "error");
-
-  } finally {
-    editStockButton.disabled = false;
-    editStockButton.textContent = "SAVE CHANGES";
-  }
-});
-
-
-// ========================================
-// INITIAL PAGE LOAD
-// ========================================
-
-if (!stockToken) {
-  showMessage(
-    message,
-    "Please log in through the admin dashboard first.",
-    "error"
-  );
-
-  stockList.textContent =
-    "Log in through the admin dashboard to view stock.";
-
-} else {
-  loadCurrentStock();
-}

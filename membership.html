@@ -8,9 +8,15 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-mark">AX</span><span>AXOM <b>GAMING</b><small>MEMBERSHIP DESK</small></span></a>
+    <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>MEMBERSHIP DESK</small></span></a>
     <div class="top-actions"><span class="live-dot"></span><span>Admin workspace</span><a href="index.html" class="back-link">← Main dashboard</a></div>
   </header>
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="side-label">WORKSPACE</div><a class="side-link" href="index.html"><span>▦</span> Overview</a>
+    <a class="side-link active" href="membership.html"><span>♙</span> Membership desk</a>
+    <a class="side-link" href="stock.html"><span>▤</span> Stock & inventory</a>
+    <div class="sidebar-bottom"><span class="online-dot"></span> System operational<small>AXOM GAMING · ADMIN</small></div>
+  </aside>
   <main class="wrap">
     <section class="hero">
       <div><p class="eyebrow">MEMBER OPERATIONS</p><h1>Membership <em>booking desk</em></h1><p class="sub">Register members, book PS5 hours, and keep every hour accounted for.</p></div>
@@ -44,7 +50,7 @@
           <label class="full">Find member<select id="memberSelect" name="memberId" required><option value="">Load members first…</option></select></label>
           <div id="memberCard" class="member-card full"><span>Select a member to see their balance.</span></div>
           <label>Booking date<input name="date" id="bookingDate" type="date" required></label>
-          <label>Start time<input type="time" id="startTime" name="startTime" step="60" required></label>
+          <label>Start time<input name="startTime" type="time" min="10:00" max="21:00" step="1800" value="16:00" required></label>
           <label>Duration<select name="durationMinutes" required>
             <option value="30">30 minutes</option><option value="60" selected>1 hour</option>
             <option value="90">1 hour 30 minutes</option><option value="120">2 hours</option>
