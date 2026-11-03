@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#08090d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AXOM GAMING">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AXOM GAMING | Membership Desk</title>
@@ -97,5 +104,15 @@
     <footer>AXOM GAMING <span>•</span> Train Hard. Play Better.</footer>
   </main>
   <script src="membership.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .catch(error => console.error("AXOM app offline setup failed:", error));
+    });
+  }
+</script>
+
 </body>
 </html>
