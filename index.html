@@ -42,6 +42,7 @@
       <a class="brand" href="#overview"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
       <div class="admin-controls">
         <span>ADMIN PANEL</span>
+        <button id="enablePushButton" type="button" class="logout-button">Enable notifications</button>
         <button id="logoutButton" class="logout-button">Logout</button>
       </div>
     </header>
@@ -428,6 +429,9 @@
     </div>
   </div>
 
+  <!-- Firebase Cloud Messaging (web push) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
   <script src="script.js"></script>
 
 <script>
