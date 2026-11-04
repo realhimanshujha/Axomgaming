@@ -1571,47 +1571,30 @@ async function updateNotificationStatus() {
   const enable = $("enablePushButton");
   const disable = $("disablePushButton");
 
-  enable.style.display = "block";
-  disable.style.display = "none";
-  enable.disabled = false;
-  disable.disabled = false;
+  if (!status || !enable || !disable) return;
 
   if (!("Notification" in window)) {
-    status.textContent = "Notifications are not supported.";
-    enable.disabled = true;
+    status.textContent = "Notifications are not supported by this browser.";
+    enable.style.display = "none";
+    disable.style.display = "none";
     return;
   }
 
   if (Notification.permission === "denied") {
-    status.textContent =
-      "Notifications are blocked. Change permission in browser settings.";
-    enable.disabled = true;
+    status.textContent = "Notifications are blocked in browser settings.";
+    enable.style.display = "none";
+    disable.style.display = "none";
     return;
   }
 
-  if (Notification.permission !== "granted") {
+  if (Notification.permission === "granted") {
+    status.textContent = "Permission granted. Checking device registration...";
+    enable.style.display = "block";
+    disable.style.display = "none";
+  } else {
     status.textContent = "Notifications are currently disabled.";
-    return;
-  }
-
-  try {
-    const messaging = getAxomMessaging();
-
-    const token = await messaging.getToken({
-      vapidKey: AXOM_VAPID_KEY,
-      serviceWorkerRegistration: await navigator.serviceWorker.ready
-    });
-
-    if (token) {
-      status.textContent = "Notifications are enabled on this device.";
-      enable.style.display = "none";
-      disable.style.display = "block";
-    } else {
-      status.textContent = "No active device subscription found.";
-    }
-  } catch (error) {
-    console.error(error);
-    status.textContent = "Could not verify notification status.";
+    enable.style.display = "block";
+    disable.style.display = "none";
   }
 }
 
