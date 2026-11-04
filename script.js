@@ -1530,64 +1530,82 @@ setInterval(() => {
 }, 30000);
 
 
-/* =====================================
-   AXOM GAMING PUSH NOTIFICATIONS
-===================================== */
+const notificationModal = $("notificationModal");
 
-const AXOM_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDTNRP1WNdq1Xl87ATWcxdvQtz0oATsCqM",
-  authDomain: "axom-gaming-26a40.firebaseapp.com",
-  projectId: "axom-gaming-26a40",
-  storageBucket: "axom-gaming-26a40.firebasestorage.app",
-  messagingSenderId: "866787050834",
-  appId: "1:866787050834:web:9ee0e6f620af249fc0a68b"
-};
+$("notificationSettingsButton")?.addEventListener("click", () => {
+  notificationModal.classList.remove("hidden");
+  updateNotificationStatus();
+});
 
-const AXOM_VAPID_KEY =
-  "BNo_T1iP6GA-1tO17Ebyv68wbb53YwDdSXh_BXmIJD94l4yytIOnVvRPjQhKt1AIAYLCY8rrUFGtwP65F7nWAJI";
+$("closeNotificationModal")?.addEventListener("click", () => {
+  notificationModal.classList.add("hidden");
+});
 
-let axomMessaging = null;
+notificationModal?.addEventListener("click", event => {
+  if (event.target === notificationModal) {
+    notificationModal.classList.add("hidden");
+  }
+});
 
-async function enableAxomPushNotifications() {
-  const button = $("enablePushButton");
-  if (!button) return;
+function getAxomMessaging() {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(AXOM_FIREBASE_CONFIG);
+  }
+  return firebase.messaging();
+}
 
-  if (!sessionToken) {
-    showToast("Log in before enabling notifications.", "error");
+async function updateNotificationStatus() {
+  const status = $("notificationStatus");
+  const enable = $("enablePushButton");
+  const disable = $("disablePushButton");
+
+  if (Notification.permission === "denied") {
+    status.textContent =
+      "Notifications are blocked in browser settings.";
+    enable.disabled = true;
+    disable.disabled = true;
     return;
   }
-
-  if (
-    !("serviceWorker" in navigator) ||
-    !("PushManager" in window) ||
-    !("Notification" in window)
-  ) {
-    showToast(
-      "This browser does not support web push notifications.",
-      "error"
-    );
-    return;
-  }
-
-  if (!window.firebase || !firebase.messaging) {
-    showToast(
-      "Firebase could not load. Check your internet connection and refresh.",
-      "error"
-    );
-    return;
-  }
-
-  button.disabled = true;
-  const oldText = button.textContent;
-  button.textContent = "ENABLING...";
 
   try {
-    const permission = await Notification.requestPermission();
+    const messaging = getAxomMessaging();
+    const token = await messaging.getToken({
+      vapidKey: AXOM_VAPID_KEY,
+      serviceWorkerRegistration: await navigator.serviceWorker.ready
+    });
 
+    if (token) {
+      status.textContent = "Notifications are enabled on this device.";
+      enable.style.display = "none";
+      disable.style.display = "block";
+    } else {
+      status.textContent = "Notifications are currently disabled.";
+      enable.style.display = "block";
+      disable.style.display = "none";
+    }
+  } catch (error) {
+    status.textContent = "Notifications are not enabled on this device.";
+    enable.style.display = "block";
+    disable.style.display = "none";
+  }
+}
+
+$("enablePushButton")?.addEventListener("click", async () => {
+  const button = $("enablePushButton");
+
+  try {
+    if (!sessionToken) throw new Error("Please log in first.");
+
+    button.disabled = true;
+    button.textContent = "Enabling...";
+
+    if (!("serviceWorker" in navigator)) {
+      throw new Error("Service workers are not supported.");
+    }
+
+    const permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      throw new Error(
-        "Notification permission was not granted. Enable it in browser settings."
-      );
+      throw new Error("Notification permission was not granted.");
     }
 
     const registration = await navigator.serviceWorker.register(
@@ -1596,76 +1614,70 @@ async function enableAxomPushNotifications() {
 
     await navigator.serviceWorker.ready;
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(AXOM_FIREBASE_CONFIG);
-    }
-
-    axomMessaging = firebase.messaging();
-
-    const fcmToken = await axomMessaging.getToken({
+    const messaging = getAxomMessaging();
+    const fcmToken = await messaging.getToken({
       vapidKey: AXOM_VAPID_KEY,
       serviceWorkerRegistration: registration
     });
 
-    if (!fcmToken) {
-      throw new Error(
-        "Firebase did not return a device token. Try again."
-      );
-    }
+    if (!fcmToken) throw new Error("Unable to create device token.");
 
-    const platform =
-      /iPhone|iPad|iPod/i.test(navigator.userAgent)
-        ? "iOS PWA"
-        : /Android/i.test(navigator.userAgent)
-          ? "Android"
-          : "Web";
+    const platform = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      ? "iOS PWA"
+      : /Android/i.test(navigator.userAgent)
+        ? "Android"
+        : "Web";
 
     await apiRequest({
       action: "registerPushToken",
       token: sessionToken,
-      fcmToken: fcmToken,
-      platform: platform
+      fcmToken,
+      platform
     });
 
-    axomMessaging.onMessage(payload => {
-      const title =
-        payload.notification?.title || "AXOM GAMING";
-
-      const body =
-        payload.notification?.body ||
-        "A gaming session is ending soon.";
-
-      showToast(title + ": " + body, "info", 7000);
-    });
-
-    button.textContent = "Notifications enabled ✓";
-
-    showToast(
-      "This device is now subscribed to AXOM GAMING session alerts.",
-      "success"
-    );
+    showToast("Notifications enabled successfully.", "success");
+    await updateNotificationStatus();
 
   } catch (error) {
-    console.error("AXOM push setup failed:", error);
-
-    showToast(
-      error.message || "Could not enable notifications.",
-      "error",
-      6000
-    );
-
-    button.textContent = oldText;
-
+    console.error(error);
+    showToast(error.message, "error");
   } finally {
     button.disabled = false;
+    button.textContent = "Enable Notifications";
   }
-}
+});
 
-const enablePushButton = $("enablePushButton");
+$("disablePushButton")?.addEventListener("click", async () => {
+  const button = $("disablePushButton");
 
-if (enablePushButton) {
-  enablePushButton.addEventListener(
-    "click",
-    enableAxomPushNotifications
-  );
-}
+  try {
+    button.disabled = true;
+    button.textContent = "Disabling...";
+
+    const messaging = getAxomMessaging();
+    const fcmToken = await messaging.getToken({
+      vapidKey: AXOM_VAPID_KEY,
+      serviceWorkerRegistration: await navigator.serviceWorker.ready
+    });
+
+    if (fcmToken) {
+      await apiRequest({
+        action: "unregisterPushToken",
+        token: sessionToken,
+        fcmToken
+      });
+
+      await messaging.deleteToken();
+    }
+
+    showToast("Notifications disabled on this device.", "success");
+    await updateNotificationStatus();
+
+  } catch (error) {
+    console.error(error);
+    showToast(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Disable Notifications";
+  }
+});
