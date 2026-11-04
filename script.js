@@ -1530,6 +1530,18 @@ setInterval(() => {
 }, 30000);
 
 
+const AXOM_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDTNRP1WNdq1Xl87ATWcxdvQtz0oATsCqM",
+  authDomain: "axom-gaming-26a40.firebaseapp.com",
+  projectId: "axom-gaming-26a40",
+  storageBucket: "axom-gaming-26a40.firebasestorage.app",
+  messagingSenderId: "866787050834",
+  appId: "1:866787050834:web:9ee0e6f620af249fc0a68b"
+};
+
+const AXOM_VAPID_KEY =
+  "BNo_T1iP6GA-1tO17Ebyv68wbb53YwDdSXh_BXmIJD94l4yytIOnVvRPjQhKt1AIAYLCY8rrUFGtwP65F7nWAJI";
+
 const notificationModal = $("notificationModal");
 
 $("notificationSettingsButton")?.addEventListener("click", () => {
@@ -1559,16 +1571,32 @@ async function updateNotificationStatus() {
   const enable = $("enablePushButton");
   const disable = $("disablePushButton");
 
+  enable.style.display = "block";
+  disable.style.display = "none";
+  enable.disabled = false;
+  disable.disabled = false;
+
+  if (!("Notification" in window)) {
+    status.textContent = "Notifications are not supported.";
+    enable.disabled = true;
+    return;
+  }
+
   if (Notification.permission === "denied") {
     status.textContent =
-      "Notifications are blocked in browser settings.";
+      "Notifications are blocked. Change permission in browser settings.";
     enable.disabled = true;
-    disable.disabled = true;
+    return;
+  }
+
+  if (Notification.permission !== "granted") {
+    status.textContent = "Notifications are currently disabled.";
     return;
   }
 
   try {
     const messaging = getAxomMessaging();
+
     const token = await messaging.getToken({
       vapidKey: AXOM_VAPID_KEY,
       serviceWorkerRegistration: await navigator.serviceWorker.ready
@@ -1579,14 +1607,11 @@ async function updateNotificationStatus() {
       enable.style.display = "none";
       disable.style.display = "block";
     } else {
-      status.textContent = "Notifications are currently disabled.";
-      enable.style.display = "block";
-      disable.style.display = "none";
+      status.textContent = "No active device subscription found.";
     }
   } catch (error) {
-    status.textContent = "Notifications are not enabled on this device.";
-    enable.style.display = "block";
-    disable.style.display = "none";
+    console.error(error);
+    status.textContent = "Could not verify notification status.";
   }
 }
 
