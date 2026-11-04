@@ -1,4 +1,5 @@
 const CACHE_NAME = "axom-gaming-pwa-v1";
+
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -16,6 +17,10 @@ const APP_SHELL = [
   "./manifest.webmanifest"
 ];
 
+/* =====================================
+   INSTALL
+===================================== */
+
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -24,46 +29,167 @@ self.addEventListener("install", event => {
   );
 });
 
+/* =====================================
+   ACTIVATE
+===================================== */
+
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
     ).then(() => self.clients.claim())
   );
 });
+
+/* =====================================
+   OFFLINE CACHING
+===================================== */
 
 self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Never intercept Apps Script/API calls, cross-origin requests, or non-GET requests.
-  if (request.method !== "GET" || url.origin !== self.location.origin) return;
-
-  // HTML navigation: try the network first so deployments/updates are picked up.
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        return response;
-      }).catch(async () => {
-        return (await caches.match(request)) || (await caches.match("./index.html"));
-      })
-    );
+  // Do not intercept API calls or cross-origin requests.
+  if (
+    request.method !== "GET" ||
+    url.origin !== self.location.origin
+  ) {
     return;
   }
 
-  // Static same-origin assets: serve cached copy and refresh it in the background.
+  // Navigation: network first.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, copy);
+          });
+
+          return response;
+        })
+        .catch(async () => {
+          return (
+            await caches.match(request) ||
+            await caches.match("./index.html")
+          );
+        })
+    );
+
+    return;
+  }
+
+  // Static assets: cache first, then network.
   event.respondWith(
     caches.match(request).then(cached => {
-      const network = fetch(request).then(response => {
-        if (response && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      }).catch(() => cached);
+      const network = fetch(request)
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, copy);
+            });
+          }
+
+          return response;
+        })
+        .catch(() => cached);
+
       return cached || network;
+    })
+  );
+});
+
+/* =====================================
+   FIREBASE CLOUD MESSAGING
+===================================== */
+
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"
+);
+
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"
+);
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDTNRP1WNdq1Xl87ATWcxdvQtz0oATsCqM",
+  authDomain: "axom-gaming-26a40.firebaseapp.com",
+  projectId: "axom-gaming-26a40",
+  storageBucket: "axom-gaming-26a40.firebasestorage.app",
+  messagingSenderId: "866787050834",
+  appId: "1:866787050834:web:9ee0e6f620af249fc0a68b"
+});
+
+const messaging = firebase.messaging();
+
+/* =====================================
+   BACKGROUND NOTIFICATIONS
+===================================== */
+
+messaging.onBackgroundMessage(payload => {
+  const title =
+    payload.notification?.title || "AXOM GAMING";
+
+  const options = {
+    body:
+      payload.notification?.body ||
+      "A gaming session is ending soon.",
+
+    icon: "./icon-192.png",
+    badge: "./icon-192.png",
+
+    tag: payload.data?.sessionId
+      ? "axom-session-ending-" + payload.data.sessionId
+      : "axom-session-ending",
+
+    renotify: false,
+
+    data: {
+      url: "./"
+    }
+  };
+
+  return self.registration.showNotification(
+    title,
+    options
+  );
+});
+
+/* =====================================
+   NOTIFICATION CLICK
+===================================== */
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const target = new URL(
+    "./",
+    self.location.origin
+  ).href;
+
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    }).then(windowClients => {
+
+      for (const client of windowClients) {
+        if ("focus" in client) {
+          return client.focus();
+        }
+      }
+
+      if (clients.openWindow) {
+        return clients.openWindow(target);
+      }
     })
   );
 });
