@@ -608,3 +608,95 @@ input[type="email"] {
     background: #ffffff !important;
     caret-color: #111111;
 }
+
+
+
+.notification-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.notification-modal.hidden {
+  display: none;
+}
+
+.notification-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: #171717;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 18px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+
+.notification-close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.notification-icon {
+  font-size: 38px;
+  margin-bottom: 12px;
+}
+
+.notification-modal-content h2 {
+  margin: 0 0 10px;
+}
+
+.notification-modal-content p {
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notification-status {
+  background: #252525;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+.notification-enable,
+.notification-disable {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.notification-enable {
+  background: #16a34a;
+  color: white;
+}
+
+.notification-disable {
+  background: #dc2626;
+  color: white;
+}
+
+.notification-enable:disabled,
+.notification-disable:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
