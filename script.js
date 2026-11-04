@@ -1528,3 +1528,144 @@ setInterval(() => {
     loadLiveSessions();
   }
 }, 30000);
+
+
+/* =====================================
+   AXOM GAMING PUSH NOTIFICATIONS
+===================================== */
+
+const AXOM_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDTNRP1WNdq1Xl87ATWcxdvQtz0oATsCqM",
+  authDomain: "axom-gaming-26a40.firebaseapp.com",
+  projectId: "axom-gaming-26a40",
+  storageBucket: "axom-gaming-26a40.firebasestorage.app",
+  messagingSenderId: "866787050834",
+  appId: "1:866787050834:web:9ee0e6f620af249fc0a68b"
+};
+
+const AXOM_VAPID_KEY =
+  "BNo_T1iP6GA-1tO17Ebyv68wbb53YwDdSXh_BXmIJD94l4yytIOnVvRPjQhKt1AIAYLCY8rrUFGtwP65F7nWAJI";
+
+let axomMessaging = null;
+
+async function enableAxomPushNotifications() {
+  const button = $("enablePushButton");
+  if (!button) return;
+
+  if (!sessionToken) {
+    showToast("Log in before enabling notifications.", "error");
+    return;
+  }
+
+  if (
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    !("Notification" in window)
+  ) {
+    showToast(
+      "This browser does not support web push notifications.",
+      "error"
+    );
+    return;
+  }
+
+  if (!window.firebase || !firebase.messaging) {
+    showToast(
+      "Firebase could not load. Check your internet connection and refresh.",
+      "error"
+    );
+    return;
+  }
+
+  button.disabled = true;
+  const oldText = button.textContent;
+  button.textContent = "ENABLING...";
+
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      throw new Error(
+        "Notification permission was not granted. Enable it in browser settings."
+      );
+    }
+
+    const registration = await navigator.serviceWorker.register(
+      "./service-worker.js"
+    );
+
+    await navigator.serviceWorker.ready;
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(AXOM_FIREBASE_CONFIG);
+    }
+
+    axomMessaging = firebase.messaging();
+
+    const fcmToken = await axomMessaging.getToken({
+      vapidKey: AXOM_VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
+
+    if (!fcmToken) {
+      throw new Error(
+        "Firebase did not return a device token. Try again."
+      );
+    }
+
+    const platform =
+      /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        ? "iOS PWA"
+        : /Android/i.test(navigator.userAgent)
+          ? "Android"
+          : "Web";
+
+    await apiRequest({
+      action: "registerPushToken",
+      token: sessionToken,
+      fcmToken: fcmToken,
+      platform: platform
+    });
+
+    axomMessaging.onMessage(payload => {
+      const title =
+        payload.notification?.title || "AXOM GAMING";
+
+      const body =
+        payload.notification?.body ||
+        "A gaming session is ending soon.";
+
+      showToast(title + ": " + body, "info", 7000);
+    });
+
+    button.textContent = "Notifications enabled ✓";
+
+    showToast(
+      "This device is now subscribed to AXOM GAMING session alerts.",
+      "success"
+    );
+
+  } catch (error) {
+    console.error("AXOM push setup failed:", error);
+
+    showToast(
+      error.message || "Could not enable notifications.",
+      "error",
+      6000
+    );
+
+    button.textContent = oldText;
+
+  } finally {
+    button.disabled = false;
+  }
+}
+
+const enablePushButton = $("enablePushButton");
+
+if (enablePushButton) {
+  enablePushButton.addEventListener(
+    "click",
+    enableAxomPushNotifications
+  );
+}
