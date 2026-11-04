@@ -431,20 +431,7 @@
     </div>
   </div>
 
-  <!-- Firebase Cloud Messaging (web push) -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
-  <script src="script.js"></script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./service-worker.js")
-        .catch(error => console.error("AXOM app offline setup failed:", error));
-    });
-  }
-</script>
-
+  <!-- NOTIFICATION SETTINGS POPUP -->
 <div id="notificationModal" class="notification-modal hidden">
   <div class="notification-modal-content">
     <button id="closeNotificationModal" class="notification-close">&times;</button>
@@ -467,6 +454,22 @@
     </button>
   </div>
 </div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+
+<!-- MAIN JAVASCRIPT -->
+<script src="script.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .catch(error => console.error("AXOM app offline setup failed:", error));
+    });
+  }
+</script>
 
 </body>
 </html>
