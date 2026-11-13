@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08090d">
+<title>AXOM GAMING | Monthly Report</title>
+<link rel="stylesheet" href="report.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <img src="axom-logo.jpeg" alt="">
+    <span>AXOM <b>GAMING</b><small>ADMIN WORKSPACE</small></span>
+  </a>
+  <span class="crumb">WORKSPACE / <strong>MONTHLY REPORT</strong></span>
+  <a class="back" href="index.html">← Main dashboard</a>
+</header>
+
+<aside class="sidebar">
+  <div class="side-label">WORKSPACE</div>
+  <a class="side-link" href="index.html"><span>▦</span>Overview</a>
+  <a class="side-link" href="membership.html"><span>♙</span>Membership desk</a>
+  <a class="side-link" href="stock.html"><span>▤</span>Stock &amp; inventory</a>
+  <a class="side-link" href="dues.html"><span>₹</span>Dues Management</a>
+  <a class="side-link active" href="report.html"><span>▥</span>Monthly Report</a>
+  <div class="sidebar-bottom">
+    <i></i> System operational
+    <small>AXOM GAMING · ADMIN</small>
+  </div>
+</aside>
+
+<main class="main">
+
+  <section class="heading">
+    <div>
+      <p class="eyebrow">BUSINESS PERFORMANCE / REPORTS</p>
+      <h1>Monthly <em>Report</em></h1>
+      <p class="sub">Gaming sales, snack sales, collections and outstanding dues in one place.</p>
+    </div>
+
+    <div class="controls">
+      <label for="monthPicker">REPORT MONTH</label>
+      <input id="monthPicker" type="month">
+      <button id="refreshBtn">↻ Refresh</button>
+      <button id="printBtn">Print report</button>
+    </div>
+  </section>
+
+  <div id="notice" class="notice hidden"></div>
+
+  <div class="summary">
+    <article>
+      <span>Total sales</span>
+      <strong id="totalSales">₹0</strong>
+      <small>Gaming + snacks</small>
+    </article>
+
+    <article>
+      <span>Gaming revenue</span>
+      <strong id="gamingSales">₹0</strong>
+      <small>Gaming sessions only</small>
+    </article>
+
+    <article>
+      <span>Snack sales</span>
+      <strong id="snackSales">₹0</strong>
+      <small>Snack_Sales ledger</small>
+    </article>
+
+    <article class="alert">
+      <span>Outstanding dues</span>
+      <strong id="totalDues">₹0</strong>
+      <small>Gaming + manual dues</small>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="panel-title">
+      <div>
+        <p class="eyebrow">MONTHLY OVERVIEW</p>
+        <h2>Revenue &amp; collections</h2>
+      </div>
+      <span id="monthLabel" class="tag">—</span>
+    </div>
+
+    <div class="metrics">
+      <div><span>Cash collected</span><b id="cashCollected">₹0</b></div>
+      <div><span>UPI collected</span><b id="upiCollected">₹0</b></div>
+      <div><span>Other collected</span><b id="otherCollected">₹0</b></div>
+      <div><span>Payments received this month</span><b id="dueCollections">₹0</b></div>
+      <div><span>Gaming sessions</span><b id="sessionCount">0</b></div>
+      <div><span>Snack items sold</span><b id="snackQty">0</b></div>
+    </div>
+
+    <p class="note">
+      Sales are counted by transaction date. Due collections are shown separately and are not added again to sales, preventing double counting.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">
+      <div>
+        <p class="eyebrow">DAILY BREAKDOWN</p>
+        <h2>Sales by day</h2>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Gaming sales</th>
+            <th>Snack sales</th>
+            <th>Total sales</th>
+            <th>Sessions</th>
+          </tr>
+        </thead>
+        <tbody id="dailyBody">
+          <tr><td colspan="5" class="empty">Select a month.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">
+      <div>
+        <p class="eyebrow">OUTSTANDING BALANCES</p>
+        <h2>Dues summary</h2>
+      </div>
+      <a href="dues.html" class="tag linktag">Open Dues Management →</a>
+    </div>
+
+    <div class="dues-grid">
+      <div><span>Gaming dues outstanding</span><b id="gamingDues">₹0</b></div>
+      <div><span>Manual dues outstanding</span><b id="manualDues">₹0</b></div>
+      <div><span>Total outstanding</span><b id="duesGrand">₹0</b></div>
+    </div>
+  </section>
+
+  <footer>AXOM GAMING <i>•</i> Train Hard. Play Better.</footer>
+
+</main>
+
+<script src="report.js"></script>
+</body>
+</html>
