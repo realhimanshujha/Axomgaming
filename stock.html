@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#08090d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AXOM GAMING">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090b10">
+  <title>AXOM GAMING | Stock & Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stock.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="index.html">
+        <img src="axom-logo.jpeg" alt="AXOM GAMING logo">
+        <span class="brand-copy"><strong>AXOM <b>GAMING</b></strong><small>CONTROL CENTER</small></span>
+      </a>
+
+      <div class="nav-caption">WORKSPACE</div>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span><span>Overview</span></a>
+        <a class="nav-link" href="membership.html"><span class="nav-icon">♙</span><span>Membership desk</span></a>
+        <a class="nav-link active" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span><i></i></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <span><strong>System operational</strong><small>AXOM GAMING · ADMIN</small></span>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="topbar">
+        <div class="mobile-brand">
+          <img src="axom-logo.jpeg" alt="">
+          <strong>AXOM <b>GAMING</b></strong>
+        </div>
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-sep">/</span><strong>Stock & Inventory</strong></div>
+        <a href="index.html" class="back-button"><span>←</span> Dashboard</a>
+      </header>
+
+      <main class="page-content">
+        <section class="page-heading">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> INVENTORY MANAGEMENT</div>
+            <h1>Stock <span>&</span> Inventory</h1>
+            <p>Keep your cafe essentials organised. Add products, monitor quantities and update prices from one place.</p>
+          </div>
+          <div class="heading-badge"><span class="status-dot"></span> LIVE INVENTORY</div>
+        </section>
+
+        <section class="workspace-grid">
+          <section class="panel add-panel" aria-labelledby="addStockHeading">
+            <div class="panel-heading">
+              <div class="panel-icon add-icon">＋</div>
+              <div>
+                <div class="panel-kicker">PRODUCT SETUP</div>
+                <h2 id="addStockHeading">Add new stock</h2>
+                <p>Register a snack or drink in your inventory.</p>
+              </div>
+            </div>
+
+            <form id="addStockForm" class="stock-form">
+              <div class="field">
+                <label for="snackName">Product name</label>
+                <input id="snackName" type="text" placeholder="e.g. Red Bull" maxlength="100" required>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label for="quantity">Opening quantity</label>
+                  <div class="input-wrap"><input id="quantity" type="number" min="1" step="1" placeholder="e.g. 12" required><span>PACKETS</span></div>
+                </div>
+                <div class="field">
+                  <label for="sellingPrice">Selling price</label>
+                  <div class="input-wrap price-input"><span>₹</span><input id="sellingPrice" type="number" min="0.01" step="0.01" placeholder="e.g. 125" required></div>
+                </div>
+              </div>
+              <div class="form-note"><span>ⓘ</span> The product will be added to your active inventory.</div>
+              <button id="saveButton" type="submit" class="primary-button"><span>＋</span> Add product to stock</button>
+              <p id="message" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="panel inventory-panel" aria-labelledby="inventoryHeading">
+            <div class="inventory-top">
+              <div>
+                <div class="panel-kicker">YOUR PRODUCTS</div>
+                <h2 id="inventoryHeading">Current inventory</h2>
+                <p>Live quantities and selling prices for active products.</p>
+              </div>
+              <div class="live-pill"><span class="status-dot"></span> LIVE</div>
+            </div>
+            <div class="inventory-column-labels"><span>PRODUCT</span><span>AVAILABLE STOCK</span></div>
+            <div id="stockList" class="stock-list" aria-live="polite">
+              <p class="empty-state">Loading inventory...</p>
+            </div>
+            <div class="inventory-footer"><span class="status-dot"></span> Inventory updates automatically after each change.</div>
+          </section>
+        </section>
+
+        <section class="panel edit-panel">
+          <div class="edit-copy">
+            <div class="panel-icon edit-icon">✎</div>
+            <div>
+              <div class="panel-kicker">QUICK CORRECTION</div>
+              <h2>Update existing stock</h2>
+              <p>Correct a product's available quantity or selling price.</p>
+            </div>
+          </div>
+          <button type="button" id="openEditStockModal" class="secondary-button">Edit inventory <span>↗</span></button>
+        </section>
+
+        <footer class="page-footer"><span>AXOM GAMING</span><span>PLAY · COMPETE · REPEAT</span></footer>
+      </main>
+    </div>
+  </div>
+
+  <div id="editStockModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editStockHeading">
+    <div class="modal-box">
+      <button type="button" id="closeEditStockModal" class="modal-close" aria-label="Close dialog">×</button>
+      <div class="modal-kicker">INVENTORY CONTROL</div>
+      <h2 id="editStockHeading">Edit product stock</h2>
+      <p class="modal-description">Choose a product and enter its corrected stock quantity and selling price.</p>
+      <form id="editStockForm">
+        <div class="field">
+          <label for="editSnackId">Select product</label>
+          <select id="editSnackId" required><option value="">Loading products...</option></select>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="editQuantity">Correct quantity</label>
+            <input id="editQuantity" type="number" min="0" step="1" required>
+          </div>
+          <div class="field">
+            <label for="editSellingPrice">Selling price (₹)</label>
+            <input id="editSellingPrice" type="number" min="0.01" step="0.01" required>
+          </div>
+        </div>
+        <div class="modal-warning"><span>!</span> This sets the stock to the quantity entered; it does not add to the existing quantity.</div>
+        <button id="editStockButton" type="submit" class="primary-button">Save changes</button>
+        <p id="editMessage" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="stock.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .catch(error => console.error("AXOM app offline setup failed:", error));
+    });
+  }
+</script>
+
+</body>
+</html>

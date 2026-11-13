@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#08090d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AXOM GAMING">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AXOM GAMING | Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+  <!-- LOGIN PAGE -->
+  <section id="loginPage" class="login-page">
+    <div class="login-card">
+      <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
+      <p class="subtitle">ADMINISTRATION PORTAL</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+               autocomplete="current-password" required>
+
+        <button type="submit" id="loginButton">LOGIN</button>
+        <p id="loginMessage" class="message"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="dashboardPage" class="dashboard-page hidden">
+
+    <header class="topbar">
+      <a class="brand" href="#overview"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
+      <div class="admin-controls">
+        <span>ADMIN PANEL</span>
+        <button id="notificationSettingsButton" class="logout-button" type="button">
+          Notification Settings
+        </button>
+        <button id="logoutButton" class="logout-button">Logout</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="side-label">WORKSPACE</div>
+      <a class="side-link active" href="#overview"><span>▦</span> Overview</a>
+      <a class="side-link" href="#new-booking"><span>＋</span> New booking</a>
+      <a class="side-link" href="#live-sessions"><span>◉</span> Live sessions</a>
+      <div class="side-label">MANAGEMENT</div>
+      <a class="side-link" href="membership.html"><span>♙</span> Membership desk</a>
+      <a class="side-link" href="stock.html"><span>▤</span> Stock & inventory</a>
+      <div class="sidebar-bottom"><span class="online-dot"></span> System operational<small>AXOM GAMING · ADMIN</small></div>
+    </aside>
+    <main class="container">
+
+      <div class="page-heading" id="overview">
+        <div>
+          <h1>Gaming Management</h1>
+          <p>Manage customer bookings, gaming charges and snacks.</p>
+        </div>
+        <div id="todayDate" class="today-date"></div>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div class="summary-grid">
+
+        <div class="summary-card">
+            <p>Today's Gaming Revenue</p>
+            <h2 id="dailyGaming">₹0</h2>
+        </div>
+
+        <div class="summary-card">
+            <p>Today's Snacks Revenue</p>
+            <h2 id="dailySnacks">₹0</h2>
+        </div>
+
+        <div class="summary-card highlight">
+            <p>Today's Total Revenue</p>
+            <h2 id="dailyTotal">₹0</h2>
+        </div>
+
+        <div class="summary-card">
+            <p>Cash Collections</p>
+            <h2 id="dailyCash">₹0</h2>
+        </div>
+
+        <div class="summary-card">
+            <p>UPI Collections</p>
+            <h2 id="dailyUPI">₹0</h2>
+        </div>
+
+        <div class="summary-card">
+            <p>Customers Today</p>
+            <h2 id="dailyCustomers">0</h2>
+        </div>
+
+        </div>
+
+      <!-- CUSTOMER FORM -->
+        <section class="panel" id="new-booking">
+          <div class="panel-heading">
+            <div>
+              <h2>New Customer Booking</h2>
+              <p>Enter customer details and select gaming options.</p>
+            </div>
+          </div>
+
+          <form id="bookingForm" autocomplete="off">
+
+            <div class="form-grid">
+
+              <div class="field">
+                <label for="customerName">Customer Name *</label>
+                <input
+                  id="customerName"
+                  type="text"
+                  maxlength="100"
+                  required
+                  autocomplete="new-password"
+                  name="booking_customer_name"
+                >
+              </div>
+
+              <div class="field">
+                <label for="phone">
+                  Phone Number
+                  <span style="color:#9298a4;font-weight:500;">(Optional)</span>
+                </label>
+
+                <input
+                  id="phone"
+                  type="tel"
+                  inputmode="numeric"
+                  maxlength="10"
+                  pattern="[0-9]{10}"
+                  title="Enter a 10-digit phone number, or leave blank."
+                  autocomplete="new-password"
+                  name="booking_customer_phone"
+                >
+              </div>
+
+            <div class="field">
+              <label for="bookingDate">Date *</label>
+              <input id="bookingDate" type="date" required>
+            </div>
+
+            <div class="field">
+              <label for="startTime">Starting Time *</label>
+              <input id="startTime" type="time"
+                     min="10:00" max="21:30" required>
+            </div>
+
+            <div class="field">
+              <label for="duration">Gaming Duration *</label>
+              <select id="duration" required>
+                <option value="30">30 Minutes</option>
+                <option value="60" selected>1 Hour</option>
+                <option value="90">1.5 Hours</option>
+                <option value="120">2 Hours</option>
+                <option value="150">2.5 Hours</option>
+                <option value="180">3 Hours</option>
+                <option value="240">4 Hours</option>
+                <option value="300">5 Hours</option>
+                <option value="360">6 Hours</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="endTime">Ending Time</label>
+              <input id="endTime" type="time" readonly>
+            </div>
+
+            <div class="field">
+              <label for="console">Console *</label>
+              <select id="console" required>
+                <option value="">Loading consoles...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="players">Number of Players *</label>
+              <select id="players" required>
+                <option value="Solo">Solo</option>
+                <option value="Duo">Duo</option>
+                <option value="Trio">Trio</option>
+                <option value="Quad">Quad</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- SNACKS -->
+          <div class="section-divider">
+            <h3>Snacks & Inventory</h3>
+            <p>Choose snacks from your available stock.</p>
+          </div>
+
+          <div class="snack-controls">
+            <div class="field snack-select">
+              <label for="snackSelect">Select Snack</label>
+              <select id="snackSelect">
+                <option value="">Loading stock...</option>
+              </select>
+            </div>
+
+            <div class="field quantity-field">
+              <label for="snackQuantity">Quantity</label>
+              <input id="snackQuantity" type="number"
+                     min="1" max="1000" value="1">
+            </div>
+
+            <button type="button" id="addSnackButton"
+                    class="secondary-button">
+              + Add Snack
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Snack</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="snackTableBody">
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    No snacks added.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- BILL SUMMARY -->
+          <div class="bill-box">
+            <div>
+              <span>Gaming Amount</span>
+              <strong id="gamingAmount">₹0.00</strong>
+            </div>
+
+            <div>
+              <span>Snacks Amount</span>
+              <strong id="snacksAmount">₹0.00</strong>
+            </div>
+
+            <div class="grand-total">
+              <span>Grand Total</span>
+              <strong id="grandTotal">₹0.00</strong>
+            </div>
+          </div>
+
+          <div class="form-grid payment-grid">
+            <div class="field">
+              <label for="paymentMethod">Payment Method *</label>
+              <select id="paymentMethod" required>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="reset" class="reset-button">
+              Clear Form
+            </button>
+
+            <button type="submit" id="saveBookingButton"
+                    class="primary-button">
+              SAVE BOOKING
+            </button>
+          </div>
+
+          <p id="bookingMessage" class="message"></p>
+
+        </form>
+      </section>
+
+      <!-- LIVE GAMING SECTION -->
+
+      <section class="panel live-panel" id="live-sessions">
+
+        <div class="panel-heading live-heading">
+          <div>
+            <h2>Live Gaming Sessions</h2>
+            <p>Manage active players, extend time and add snacks.</p>
+          </div>
+
+          <button
+            type="button"
+            id="refreshSessionsButton"
+            class="secondary-button"
+          >
+            Refresh
+          </button>
+        </div>
+
+        <div class="live-summary">
+          <div>
+            <span>Active Sessions</span>
+            <strong id="activeSessionCount">0</strong>
+          </div>
+
+          <div>
+            <span>Active Gaming Revenue</span>
+            <strong id="activeGamingRevenue">₹0</strong>
+          </div>
+
+          <div>
+            <span>Active Snack Revenue</span>
+            <strong id="activeSnacksRevenue">₹0</strong>
+          </div>
+        </div>
+
+        <div id="liveSessionsContainer" class="live-sessions-grid">
+
+          <div class="empty-live-state">
+            <h3>No Active Sessions</h3>
+            <p>New gaming sessions will appear here.</p>
+          </div>
+
+        </div>
+
+        <p id="liveMessage" class="message"></p>
+
+      </section>
+
+    </main>
+  </section>
+
+  <!-- PAYMENT MODAL -->
+  <div id="paymentModal" class="payment-modal hidden">
+    <div class="payment-modal-box">
+      <h2>Collect Payment</h2>
+
+      <p id="paymentCustomer"></p>
+
+      <div class="payment-summary">
+        <div>
+          <span>Original Bill</span>
+          <strong id="paymentOriginalBill">₹0.00</strong>
+        </div>
+
+        <div>
+          <span>Discount</span>
+          <input type="number" id="paymentDiscount"
+                min="0" step="0.01" value="0">
+        </div>
+
+        <div>
+          <span>Final Bill</span>
+          <strong id="paymentFinalBill">₹0.00</strong>
+        </div>
+
+        <hr>
+
+        <div>
+          <span>Cash Received</span>
+          <input type="number" id="paymentCash"
+                min="0" step="0.01" value="0">
+        </div>
+
+        <div>
+          <span>UPI Received</span>
+          <input type="number" id="paymentUPI"
+                min="0" step="0.01" value="0">
+        </div>
+
+        <div>
+          <span>Other Payment</span>
+          <input type="number" id="paymentOther"
+                min="0" step="0.01" value="0">
+        </div>
+
+        <hr>
+
+        <div>
+          <span>Total Received</span>
+          <strong id="paymentTotalReceived">₹0.00</strong>
+        </div>
+
+        <div>
+          <span>Outstanding Due</span>
+          <strong id="paymentDue">₹0.00</strong>
+        </div>
+      </div>
+
+      <p id="paymentError" class="message"></p>
+
+      <div class="payment-actions">
+        <button type="button" id="cancelPaymentButton">
+          Cancel
+        </button>
+
+        <button type="button" id="confirmPaymentButton">
+          Collect Payment & End Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- GLOBAL NOTIFICATIONS AND DIALOGS -->
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="appDialog" class="app-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+    <div class="app-dialog-card">
+      <div class="app-dialog-icon" id="appDialogIcon">i</div>
+      <h2 id="appDialogTitle">Notice</h2>
+      <p id="appDialogMessage"></p>
+      <div id="appDialogInputWrap" class="app-dialog-input-wrap hidden">
+        <input id="appDialogInput" type="text" autocomplete="off">
+      </div>
+      <div class="app-dialog-actions">
+        <button type="button" id="appDialogCancel" class="app-dialog-cancel">Cancel</button>
+        <button type="button" id="appDialogConfirm" class="app-dialog-confirm">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION SETTINGS POPUP -->
+<div id="notificationModal" class="notification-modal hidden">
+  <div class="notification-modal-content">
+    <button id="closeNotificationModal" class="notification-close">&times;</button>
+
+    <div class="notification-icon">🔔</div>
+
+    <h2>Notification Settings</h2>
+    <p>Receive alerts 5 minutes before a gaming session ends.</p>
+
+    <div id="notificationStatus" class="notification-status">
+      Checking notification status...
+    </div>
+
+    <button id="enablePushButton" class="notification-enable">
+      Enable Notifications
+    </button>
+
+    <button id="disablePushButton" class="notification-disable">
+      Disable Notifications
+    </button>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+
+<!-- MAIN JAVASCRIPT -->
+<script src="script.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .catch(error => console.error("AXOM app offline setup failed:", error));
+    });
+  }
+</script>
+
+</body>
+</html>
