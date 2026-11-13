@@ -1,65 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#090b10">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090b10">
   <title>AXOM GAMING | Dues Management</title>
   <link rel="stylesheet" href="dues.css">
 </head>
+
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="Main navigation">
-      <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span class="brand-copy"><strong>AXOM <b>GAMING</b></strong><small>CONTROL CENTER</small></span></a>
-      <div class="nav-caption">WORKSPACE</div>
-      <nav class="nav-list">
-        <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span><span>Overview</span></a>
-        <a class="nav-link" href="membership.html"><span class="nav-icon">♙</span><span>Membership desk</span></a>
-        <a class="nav-link" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span></a>
-        <a class="nav-link active" href="dues.html"><span class="nav-icon">₹</span><span>Dues management</span><i></i></a>
-      </nav>
-      <div class="sidebar-footer"><span class="status-dot"></span><span><strong>System operational</strong><small>AXOM GAMING · ADMIN</small></span></div>
-    </aside>
-    <div class="main-column">
-      <header class="topbar"><div class="mobile-brand"><img src="axom-logo.jpeg" alt=""><strong>AXOM <b>GAMING</b></strong></div><div class="breadcrumb"><span>Workspace</span><span class="crumb-sep">/</span><strong>Dues Management</strong></div><a href="index.html" class="back-button"><span>←</span> Dashboard</a></header>
-      <main class="page-content">
-        <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> PAYMENT CONTROL</div><h1>Dues <span>&</span> Collections</h1><p>Track outstanding customer balances and record full or partial payments.</p></div><button id="refreshBtn" class="primary-button">↻ Refresh</button></section>
-        <div id="notice" class="notice hidden" role="status"></div>
-        <section class="summary-grid">
-          <article class="summary-card highlight"><p>Total outstanding</p><h2 id="totalOutstanding">₹0.00</h2></article>
-          <article class="summary-card"><p>Customers with dues</p><h2 id="outstandingCustomers">0</h2></article>
-          <article class="summary-card"><p>Collected today</p><h2 id="collectedToday">₹0.00</h2></article>
-        </section>
-        <section class="panel">
-          <div class="panel-heading"><div><div class="panel-kicker">ACCOUNTS RECEIVABLE</div><h2>Outstanding dues</h2><p>Only balances greater than ₹0 are shown here.</p></div><span class="live-pill"><span class="status-dot"></span> LIVE DATA</span></div>
-          <div class="toolbar"><input id="searchDues" class="search-input" type="search" placeholder="Search customer, phone or booking ID"><span id="dueCount" class="count-pill">0 records</span></div>
-          <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Booking / Date</th><th>Console</th><th>Final bill</th><th>Outstanding</th><th>Action</th></tr></thead><tbody id="duesBody"><tr><td colspan="6" class="empty">Loading outstanding dues…</td></tr></tbody></table></div>
-        </section>
-        <section class="panel">
-          <div class="panel-heading"><div><div class="panel-kicker">COLLECTION LEDGER</div><h2>Recent due payments</h2><p>Every collection is recorded in your existing Due_Payments sheet.</p></div></div>
-          <div class="table-wrap"><table><thead><tr><th>Payment date</th><th>Customer</th><th>Booking ID</th><th>Method</th><th>Amount received</th></tr></thead><tbody id="historyBody"><tr><td colspan="5" class="empty">Loading payment history…</td></tr></tbody></table></div>
-        </section>
-      </main>
+
+<aside class="sidebar">
+
+  <a class="brand" href="index.html">
+    <img src="axom-logo.jpeg" alt="AXOM GAMING">
+    <span class="brand-copy">
+      <strong>AXOM <b>GAMING</b></strong>
+      <small>ADMIN WORKSPACE</small>
+    </span>
+  </a>
+
+  <p class="nav-caption">WORKSPACE</p>
+
+  <nav class="nav-list">
+
+    <a class="nav-link" href="index.html">
+      <span class="nav-icon">▦</span>
+      Overview
+    </a>
+
+    <a class="nav-link" href="membership.html">
+      <span class="nav-icon">♟</span>
+      Membership desk
+    </a>
+
+    <a class="nav-link" href="stock.html">
+      <span class="nav-icon">▤</span>
+      Stock &amp; inventory
+    </a>
+
+    <a class="nav-link active" href="dues.html">
+      <span class="nav-icon">₹</span>
+      Dues Management
+      <i></i>
+    </a>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>
+    <div>
+      <strong>System operational</strong>
+      <small>AXOM GAMING · ADMIN</small>
     </div>
   </div>
 
-  <div id="paymentModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-card">
-      <button id="closeModal" class="modal-close" type="button" aria-label="Close">×</button>
-      <div class="eyebrow">RECEIVE PAYMENT</div><h2 id="modalTitle">Collect due</h2>
-      <p id="customerDetails" class="customer-details"></p>
-      <div class="balance-box"><span>Outstanding balance</span><strong id="modalDue">₹0.00</strong></div>
-      <form id="collectForm">
-        <input type="hidden" id="bookingId">
-        <label for="paymentAmount">Amount received (₹)</label><input id="paymentAmount" type="number" min="0.01" step="0.01" required>
-        <label for="paymentMethod">Payment method</label><select id="paymentMethod" required><option value="Cash">Cash</option><option value="UPI">UPI</option></select>
-        <p id="paymentHint" class="form-hint">You can collect the full amount or a partial payment.</p>
-        <p id="formError" class="form-error" aria-live="polite"></p>
-        <div class="modal-actions"><button id="cancelPayment" class="secondary-button" type="button">Cancel</button><button id="submitPayment" class="primary-button" type="submit">Record payment</button></div>
-      </form>
+</aside>
+
+
+<div class="main-column">
+
+  <header class="topbar">
+
+    <div class="mobile-brand">
+      <img src="axom-logo.jpeg" alt="">
+      <strong>AXOM <b>GAMING</b></strong>
     </div>
-  </div>
-  <script src="dues.js"></script>
+
+    <div class="breadcrumb">
+      <span>WORKSPACE</span>
+      <span class="crumb-sep">/</span>
+      <strong>Dues Management</strong>
+    </div>
+
+    <a class="back-button" href="index.html">
+      ← Back to overview
+    </a>
+
+  </header>
+
+
+  <main class="page-content">
+
+    <section class="page-heading">
+
+      <div>
+        <p class="eyebrow">ACCOUNTS / COLLECTIONS</p>
+
+        <h1>
+          Dues <span>Management</span>
+        </h1>
+
+        <p>
+          Track gaming balances and manually recorded customer dues separately.
+        </p>
+      </div>
+
+      <button id="refreshBtn" class="secondary-button">
+        ↻ Refresh
+      </button>
+
+    </section>
+
+
+    <div id="notice" class="notice hidden"></div>
+
+
+    <!-- SUMMARY -->
+
+    <section class="summary-grid">
+
+      <article class="summary-card">
+        <p>Gaming outstanding</p>
+        <h2 id="gamingTotal">₹0.00</h2>
+      </article>
+
+      <article class="summary-card">
+        <p>Manual outstanding</p>
+        <h2 id="manualTotal">₹0.00</h2>
+      </article>
+
+      <article class="summary-card highlight">
+        <p>Combined outstanding</p>
+        <h2 id="combinedTotal">₹0.00</h2>
+      </article>
+
+    </section>
+
+
+    <!-- GAMING DUES -->
+
+    <section class="panel">
+
+      <div class="panel-heading">
+
+        <div>
+          <p class="eyebrow">01 / GAMING SALES</p>
+          <h2>Gaming dues</h2>
+          <p>Outstanding balances from completed gaming sessions.</p>
+        </div>
+
+        <span class="count-pill">GAMING SALES</span>
+
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Booking</th>
+              <th>Date</th>
+              <th>Bill</th>
+              <th>Outstanding</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="gamingBody">
+            <tr>
+              <td colspan="7" class="empty">Loading...</td>
+            </tr>
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- ADD MANUAL DUE -->
+
+    <section class="panel">
+
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">02 / MANUAL RECORDS</p>
+          <h2>Add a manual due</h2>
+          <p>Record snacks, drinks or other purchases not linked to a gaming session.</p>
+        </div>
+      </div>
+
+
+      <form id="manualForm" class="manual-form">
+
+        <label>
+          Customer name
+          <input
+            name="customerName"
+            required
+            maxlength="100"
+            placeholder="Customer name">
+        </label>
+
+        <label>
+          Phone number
+          <input
+            name="phone"
+            inputmode="numeric"
+            pattern="[0-9]{10}"
+            maxlength="10"
+            placeholder="10-digit number">
+        </label>
+
+        <label>
+          Due date
+          <input
+            name="dueDate"
+            id="dueDate"
+            type="date"
+            required>
+        </label>
+
+        <label>
+          Due amount (₹)
+          <input
+            name="amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            placeholder="150">
+        </label>
+
+        <label class="form-wide">
+          Item / reason
+          <input
+            name="description"
+            required
+            maxlength="160"
+            placeholder="Snacks, cold drink, cup noodles...">
+        </label>
+
+        <label class="form-wide">
+          Notes (optional)
+          <textarea
+            name="notes"
+            rows="2"
+            maxlength="500"
+            placeholder="Additional details"></textarea>
+        </label>
+
+        <div class="form-wide">
+          <button class="primary-button" id="addDueBtn">
+            + Add manual due
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+
+    <!-- MANUAL DUES -->
+
+    <section class="panel">
+
+      <div class="panel-heading">
+
+        <div>
+          <p class="eyebrow">03 / MANUAL BALANCES</p>
+          <h2>Outstanding manual dues</h2>
+          <p>Track partial payments and remaining balances.</p>
+        </div>
+
+      </div>
+
+      <div class="toolbar">
+
+        <input
+          id="searchManual"
+          class="search-input"
+          placeholder="Search customer / phone / item">
+
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Reason</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th>Due</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="manualBody">
+            <tr>
+              <td colspan="8" class="empty">Loading...</td>
+            </tr>
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- PAYMENT HISTORY -->
+
+    <section class="panel">
+
+      <div class="panel-heading">
+
+        <div>
+          <p class="eyebrow">04 / COLLECTION LOG</p>
+          <h2>Recent collections</h2>
+          <p>Payment history for gaming and manual dues.</p>
+        </div>
+
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Reference</th>
+              <th>Method</th>
+              <th>Collected</th>
+            </tr>
+          </thead>
+
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="6" class="empty">No collections yet.</td>
+            </tr>
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- PAYMENT MODAL -->
+
+<div id="paymentModal" class="modal hidden">
+
+  <form id="paymentForm" class="modal-card">
+
+    <button
+      type="button"
+      id="closeModal"
+      class="modal-close">×</button>
+
+    <p class="eyebrow">RECORD COLLECTION</p>
+
+    <h2>Collect payment</h2>
+
+    <p id="paymentCustomer" class="customer-details"></p>
+
+    <input type="hidden" name="type" id="paymentType">
+    <input type="hidden" name="id" id="paymentId">
+
+    <div class="balance-box">
+      <span>Amount to collect</span>
+      <strong id="paymentBalance">₹0.00</strong>
+    </div>
+
+    <label>
+      Amount received (₹)
+      <input
+        id="paymentAmount"
+        name="amount"
+        type="number"
+        min="0.01"
+        step="0.01"
+        required>
+    </label>
+
+    <label>
+      Payment method
+      <select name="paymentMethod" required>
+        <option value="Cash">Cash</option>
+        <option value="UPI">UPI</option>
+        <option value="Other">Other</option>
+      </select>
+    </label>
+
+    <p id="paymentError" class="form-error"></p>
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        id="cancelPayment"
+        class="secondary-button">
+        Cancel
+      </button>
+
+      <button
+        class="primary-button"
+        id="collectBtn">
+        Save collection
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+
+<script src="dues.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .catch(() => {});
+  });
+}
+</script>
+
 </body>
 </html>

@@ -1,24 +1,25 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
-const token = sessionStorage.getItem("axomToken") || "";
+const token = sessionStorage.getItem("axomToken");
 
 const $ = id => document.getElementById(id);
 
-let duesData = {
-  outstanding: [],
+let state = {
+  gaming: [],
+  manual: [],
   history: []
 };
 
-let selectedDue = null;
 
-const money = value =>
-  "₹" + Number(value || 0).toLocaleString("en-IN", {
+const money = n =>
+  "₹" + Number(n || 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 
-const esc = value =>
-  String(value ?? "").replace(/[&<>"']/g, c => ({
+
+const esc = s =>
+  String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -26,18 +27,22 @@ const esc = value =>
     "'": "&#39;"
   }[c]));
 
+
 async function api(action, payload = {}) {
+
   if (!token) {
-    throw new Error(
-      "Your admin session is missing. Log in on the main dashboard, then open Dues Management."
+    throw Error(
+      "Admin session missing. Log in on the main dashboard first."
     );
   }
 
-  const response = await fetch(API_URL, {
+  const r = await fetch(API_URL, {
     method: "POST",
+
     headers: {
       "Content-Type": "text/plain;charset=utf-8"
     },
+
     body: JSON.stringify({
       action,
       token,
@@ -45,252 +50,429 @@ async function api(action, payload = {}) {
     })
   });
 
-  const result = await response.json();
+  const d = await r.json();
 
-  if (!result.success) {
-    throw new Error(result.message || "Request failed.");
+  if (!d.success) {
+    throw Error(d.message || "Request failed.");
   }
 
-  return result;
+  return d;
 }
 
-function showNotice(message, error = false) {
-  $("notice").textContent = message;
-  $("notice").classList.toggle("error", error);
+
+function notice(msg, isError = false) {
+
+  $("notice").textContent = msg;
+
+  $("notice").classList.toggle("error", isError);
+
   $("notice").classList.remove("hidden");
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
 }
 
-function hideNotice() {
-  $("notice").classList.add("hidden");
+
+function dateText(v) {
+
+  if (!v) return "—";
+
+  const d = new Date(v);
+
+  return isNaN(d)
+    ? esc(v)
+    : d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+
 }
 
-function renderDues() {
-  const q = $("searchDues").value.trim().toLowerCase();
 
-  const list = duesData.outstanding.filter(x =>
+/* LOAD DATA */
+
+async function load() {
+
+  $("gamingBody").innerHTML =
+    '<tr><td colspan="7" class="empty">Loading...</td></tr>';
+
+  try {
+
+    const d = await api("getDuesData");
+
+    state.gaming = d.gaming || [];
+    state.manual = d.manual || [];
+    state.history = d.history || [];
+
+    render();
+
+    $("notice").classList.add("hidden");
+
+  } catch (e) {
+
+    notice(e.message, true);
+
+    $("gamingBody").innerHTML =
+      '<tr><td colspan="7" class="empty">Could not load dues.</td></tr>';
+
+  }
+
+}
+
+
+/* RENDER DATA */
+
+function render() {
+
+  const g = state.gaming.reduce(
+    (s, x) => s + Number(x.dueAmount || 0),
+    0
+  );
+
+  const m = state.manual.reduce(
+    (s, x) => s + Number(x.dueAmount || 0),
+    0
+  );
+
+
+  $("gamingTotal").textContent = money(g);
+
+  $("manualTotal").textContent = money(m);
+
+  $("combinedTotal").textContent = money(g + m);
+
+
+  /* GAMING DUES */
+
+  $("gamingBody").innerHTML = state.gaming.length
+
+    ? state.gaming.map(x => `
+
+      <tr>
+
+        <td>${esc(x.customerName)}</td>
+
+        <td>${esc(x.phone || "—")}</td>
+
+        <td>${esc(x.bookingId)}</td>
+
+        <td>${dateText(x.date)}</td>
+
+        <td>${money(x.finalBill)}</td>
+
+        <td class="due">${money(x.dueAmount)}</td>
+
+        <td>
+
+          <button
+            class="small-btn"
+            data-pay="gaming"
+            data-id="${esc(x.bookingId)}"
+            data-due="${Number(x.dueAmount)}"
+            data-name="${esc(x.customerName)}">
+
+            Collect
+
+          </button>
+
+        </td>
+
+      </tr>
+
+    `).join("")
+
+    : `
+      <tr>
+        <td colspan="7" class="empty">
+          No outstanding gaming dues.
+        </td>
+      </tr>
+    `;
+
+
+  /* MANUAL DUES */
+
+  const q = $("searchManual").value.trim().toLowerCase();
+
+  const list = state.manual.filter(x =>
+
     [
       x.customerName,
       x.phone,
-      x.bookingId,
-      x.console
+      x.description,
+      x.manualDueId
+
     ].some(v =>
       String(v || "").toLowerCase().includes(q)
     )
+
   );
 
-  $("duesBody").innerHTML = list.length
+
+  $("manualBody").innerHTML = list.length
+
     ? list.map(x => `
+
       <tr>
+
+        <td>${esc(x.customerName)}</td>
+
+        <td>${esc(x.phone || "—")}</td>
+
+        <td>${esc(x.description)}</td>
+
+        <td>${dateText(x.dueDate)}</td>
+
+        <td>${money(x.totalAmount)}</td>
+
+        <td>${money(x.paidAmount)}</td>
+
+        <td class="due">${money(x.dueAmount)}</td>
+
         <td>
-          <div class="customer-name">${esc(x.customerName)}</div>
-          <span class="muted">${esc(x.phone || "No phone number")}</span>
-        </td>
-        <td>
-          ${esc(x.bookingId)}
-          <span class="muted">${esc(x.date || "—")}</span>
-        </td>
-        <td>${esc(x.console)}</td>
-        <td>${money(x.finalBill)}</td>
-        <td class="amount-due">${money(x.dueAmount)}</td>
-        <td>
-          <button class="collect-button"
-            data-booking="${esc(x.bookingId)}">
-            Collect payment
+
+          <button
+            class="small-btn"
+            data-pay="manual"
+            data-id="${esc(x.manualDueId)}"
+            data-due="${Number(x.dueAmount)}"
+            data-name="${esc(x.customerName)}">
+
+            Collect
+
           </button>
+
+        </td>
+
+      </tr>
+
+    `).join("")
+
+    : `
+      <tr>
+        <td colspan="8" class="empty">
+          No outstanding manual dues found.
         </td>
       </tr>
+    `;
+
+
+  /* PAYMENT HISTORY */
+
+  $("historyBody").innerHTML = state.history.length
+
+    ? state.history.slice(0, 100).map(x => `
+
+      <tr>
+
+        <td>${dateText(x.paymentDate)}</td>
+
+        <td>${esc(x.customerName)}</td>
+
+        <td>${esc(x.type)}</td>
+
+        <td>${esc(x.reference || "—")}</td>
+
+        <td>${esc(x.paymentMethod)}</td>
+
+        <td>${money(x.amount)}</td>
+
+      </tr>
+
     `).join("")
+
     : `
       <tr>
         <td colspan="6" class="empty">
-          ${q
-            ? "No matching dues found."
-            : "No outstanding dues. All customer balances are cleared."
-          }
+          No collections recorded yet.
         </td>
       </tr>
     `;
 
-  $("dueCount").textContent =
-    `${list.length} record${list.length === 1 ? "" : "s"}`;
-
-  $("totalOutstanding").textContent =
-    money(duesData.totalOutstanding);
-
-  $("outstandingCustomers").textContent =
-    duesData.outstandingCustomers || 0;
-
-  $("collectedToday").textContent =
-    money(duesData.collectedToday);
 }
 
-function renderHistory() {
-  $("historyBody").innerHTML = duesData.history.length
-    ? duesData.history.map(x => `
-      <tr>
-        <td>${esc(x.createdAt || x.paymentDate)}</td>
-        <td>
-          <strong>${esc(x.customerName)}</strong>
-          <span class="muted">${esc(x.phone)}</span>
-        </td>
-        <td>${esc(x.bookingId)}</td>
-        <td>${esc(x.paymentMethod)}</td>
-        <td class="amount-due">${money(x.amount)}</td>
-      </tr>
-    `).join("")
-    : `
-      <tr>
-        <td colspan="5" class="empty">
-          No due payments have been collected yet.
-        </td>
-      </tr>
-    `;
-}
 
-async function loadData() {
-  hideNotice();
+/* ADD MANUAL DUE */
 
-  $("refreshBtn").disabled = true;
-  $("refreshBtn").textContent = "Loading…";
+$("manualForm").addEventListener("submit", async e => {
+
+  e.preventDefault();
+
+  const b = $("addDueBtn");
+
+  b.disabled = true;
 
   try {
-    duesData = await api("getDuesData");
 
-    renderDues();
-    renderHistory();
+    const f = new FormData(e.currentTarget);
+
+    await api("addManualDue", {
+
+      customerName: f.get("customerName"),
+
+      phone: f.get("phone"),
+
+      dueDate: f.get("dueDate"),
+
+      amount: f.get("amount"),
+
+      description: f.get("description"),
+
+      notes: f.get("notes")
+
+    });
+
+
+    e.currentTarget.reset();
+
+    $("dueDate").value = new Date().toLocaleDateString("en-CA");
+
+    notice("Manual due added.");
+
+    await load();
 
   } catch (err) {
-    showNotice(err.message, true);
 
-    $("duesBody").innerHTML = `
-      <tr>
-        <td colspan="6" class="empty">
-          ${esc(err.message)}
-        </td>
-      </tr>
-    `;
+    notice(err.message, true);
 
   } finally {
-    $("refreshBtn").disabled = false;
-    $("refreshBtn").textContent = "↻ Refresh";
+
+    b.disabled = false;
+
   }
-}
 
-function openModal(due) {
-  selectedDue = due;
+});
 
-  $("bookingId").value = due.bookingId;
 
-  $("customerDetails").textContent =
-    `${due.customerName} · ${due.phone || "No phone"} · ${due.bookingId}`;
+/* OPEN PAYMENT MODAL */
 
-  $("modalDue").textContent = money(due.dueAmount);
+$("manualBody").addEventListener("click", e => {
 
-  $("paymentAmount").value = due.dueAmount.toFixed(2);
+  const b = e.target.closest("[data-pay]");
 
-  $("paymentAmount").max = due.dueAmount;
+  if (b) openPayment(b);
 
-  $("formError").textContent = "";
+});
 
-  $("submitPayment").disabled = false;
-  $("submitPayment").textContent = "Record payment";
+
+$("gamingBody").addEventListener("click", e => {
+
+  const b = e.target.closest("[data-pay]");
+
+  if (b) openPayment(b);
+
+});
+
+
+function openPayment(b) {
+
+  $("paymentType").value = b.dataset.pay;
+
+  $("paymentId").value = b.dataset.id;
+
+  $("paymentCustomer").textContent =
+    `${b.dataset.name} · Outstanding ${money(b.dataset.due)}`;
+
+  $("paymentBalance").textContent = money(b.dataset.due);
+
+  $("paymentAmount").max = b.dataset.due;
+
+  $("paymentAmount").value = b.dataset.due;
+
+  $("paymentError").textContent = "";
 
   $("paymentModal").classList.remove("hidden");
 
-  setTimeout(() => $("paymentAmount").focus(), 50);
 }
 
-function closeModal() {
+
+function closePayment() {
+
   $("paymentModal").classList.add("hidden");
-  selectedDue = null;
+
 }
 
-$("duesBody").addEventListener("click", event => {
-  const button = event.target.closest("[data-booking]");
 
-  if (!button) return;
+$("closeModal").addEventListener("click", closePayment);
 
-  const due = duesData.outstanding.find(
-    x => x.bookingId === button.dataset.booking
-  );
+$("cancelPayment").addEventListener("click", closePayment);
 
-  if (due) {
-    openModal(due);
-  }
-});
-
-$("searchDues").addEventListener("input", renderDues);
-
-$("refreshBtn").addEventListener("click", loadData);
-
-$("closeModal").addEventListener("click", closeModal);
-
-$("cancelPayment").addEventListener("click", closeModal);
 
 $("paymentModal").addEventListener("click", e => {
+
   if (e.target === $("paymentModal")) {
-    closeModal();
+    closePayment();
   }
+
 });
 
-$("collectForm").addEventListener("submit", async event => {
-  event.preventDefault();
 
-  if (!selectedDue) return;
+/* UPDATE PAYMENT DISPLAY */
 
-  const amount = Number($("paymentAmount").value);
-  const method = $("paymentMethod").value;
+$("paymentAmount").addEventListener("input", function () {
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    $("formError").textContent = "Enter a valid payment amount.";
-    return;
-  }
+  $("paymentBalance").textContent = money(this.value);
 
-  if (amount > selectedDue.dueAmount) {
-    $("formError").textContent =
-      `Amount cannot exceed ${money(selectedDue.dueAmount)}.`;
-    return;
-  }
+});
 
-  const button = $("submitPayment");
 
-  button.disabled = true;
-  button.textContent = "Saving…";
+/* COLLECT PAYMENT */
 
-  $("formError").textContent = "";
+$("paymentForm").addEventListener("submit", async e => {
+
+  e.preventDefault();
+
+  const btn = $("collectBtn");
+
+  btn.disabled = true;
 
   try {
-    const result = await api("collectDuePayment", {
-      bookingId: selectedDue.bookingId,
-      amount,
-      paymentMethod: method
+
+    const f = new FormData(e.currentTarget);
+
+    await api("collectDuePayment", {
+
+      type: f.get("type"),
+
+      id: f.get("id"),
+
+      amount: f.get("amount"),
+
+      paymentMethod: f.get("paymentMethod")
+
     });
 
-    closeModal();
 
-    await loadData();
+    closePayment();
 
-    showNotice(result.message);
+    notice("Payment recorded and balance updated.");
+
+    await load();
 
   } catch (err) {
-    $("formError").textContent = err.message;
+
+    $("paymentError").textContent = err.message;
 
   } finally {
-    button.disabled = false;
-    button.textContent = "Record payment";
+
+    btn.disabled = false;
+
   }
+
 });
 
-if (!token) {
-  showNotice(
-    "Please log in through the main admin dashboard first.",
-    true
-  );
-} else {
-  loadData();
-}
+
+/* REFRESH AND SEARCH */
+
+$("refreshBtn").addEventListener("click", load);
+
+$("searchManual").addEventListener("input", render);
+
+
+/* DEFAULT DATE */
+
+$("dueDate").value = new Date().toLocaleDateString("en-CA");
+
+
+/* INITIAL LOAD */
+
+load();
