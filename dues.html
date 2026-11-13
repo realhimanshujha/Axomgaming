@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#090b10">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>AXOM GAMING | Dues Management</title>
+  <link rel="stylesheet" href="dues.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span class="brand-copy"><strong>AXOM <b>GAMING</b></strong><small>CONTROL CENTER</small></span></a>
+      <div class="nav-caption">WORKSPACE</div>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span><span>Overview</span></a>
+        <a class="nav-link" href="membership.html"><span class="nav-icon">♙</span><span>Membership desk</span></a>
+        <a class="nav-link" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span></a>
+        <a class="nav-link active" href="dues.html"><span class="nav-icon">₹</span><span>Dues management</span><i></i></a>
+      </nav>
+      <div class="sidebar-footer"><span class="status-dot"></span><span><strong>System operational</strong><small>AXOM GAMING · ADMIN</small></span></div>
+    </aside>
+    <div class="main-column">
+      <header class="topbar"><div class="mobile-brand"><img src="axom-logo.jpeg" alt=""><strong>AXOM <b>GAMING</b></strong></div><div class="breadcrumb"><span>Workspace</span><span class="crumb-sep">/</span><strong>Dues Management</strong></div><a href="index.html" class="back-button"><span>←</span> Dashboard</a></header>
+      <main class="page-content">
+        <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> PAYMENT CONTROL</div><h1>Dues <span>&</span> Collections</h1><p>Track outstanding customer balances and record full or partial payments.</p></div><button id="refreshBtn" class="primary-button">↻ Refresh</button></section>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <section class="summary-grid">
+          <article class="summary-card highlight"><p>Total outstanding</p><h2 id="totalOutstanding">₹0.00</h2></article>
+          <article class="summary-card"><p>Customers with dues</p><h2 id="outstandingCustomers">0</h2></article>
+          <article class="summary-card"><p>Collected today</p><h2 id="collectedToday">₹0.00</h2></article>
+        </section>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="panel-kicker">ACCOUNTS RECEIVABLE</div><h2>Outstanding dues</h2><p>Only balances greater than ₹0 are shown here.</p></div><span class="live-pill"><span class="status-dot"></span> LIVE DATA</span></div>
+          <div class="toolbar"><input id="searchDues" class="search-input" type="search" placeholder="Search customer, phone or booking ID"><span id="dueCount" class="count-pill">0 records</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Booking / Date</th><th>Console</th><th>Final bill</th><th>Outstanding</th><th>Action</th></tr></thead><tbody id="duesBody"><tr><td colspan="6" class="empty">Loading outstanding dues…</td></tr></tbody></table></div>
+        </section>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="panel-kicker">COLLECTION LEDGER</div><h2>Recent due payments</h2><p>Every collection is recorded in your existing Due_Payments sheet.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Payment date</th><th>Customer</th><th>Booking ID</th><th>Method</th><th>Amount received</th></tr></thead><tbody id="historyBody"><tr><td colspan="5" class="empty">Loading payment history…</td></tr></tbody></table></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="paymentModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <button id="closeModal" class="modal-close" type="button" aria-label="Close">×</button>
+      <div class="eyebrow">RECEIVE PAYMENT</div><h2 id="modalTitle">Collect due</h2>
+      <p id="customerDetails" class="customer-details"></p>
+      <div class="balance-box"><span>Outstanding balance</span><strong id="modalDue">₹0.00</strong></div>
+      <form id="collectForm">
+        <input type="hidden" id="bookingId">
+        <label for="paymentAmount">Amount received (₹)</label><input id="paymentAmount" type="number" min="0.01" step="0.01" required>
+        <label for="paymentMethod">Payment method</label><select id="paymentMethod" required><option value="Cash">Cash</option><option value="UPI">UPI</option></select>
+        <p id="paymentHint" class="form-hint">You can collect the full amount or a partial payment.</p>
+        <p id="formError" class="form-error" aria-live="polite"></p>
+        <div class="modal-actions"><button id="cancelPayment" class="secondary-button" type="button">Cancel</button><button id="submitPayment" class="primary-button" type="submit">Record payment</button></div>
+      </form>
+    </div>
+  </div>
+  <script src="dues.js"></script>
+</body>
+</html>
