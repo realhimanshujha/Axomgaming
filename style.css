@@ -700,3 +700,183 @@ input[type="email"] {
   opacity: .5;
   cursor: not-allowed;
 }
+
+
+/* =========================================
+   AXOM GAMING - FORGOT PASSWORD DIALOG FIX
+========================================= */
+
+#appDialog {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+
+  display: flex;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 20px !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: blur(9px);
+}
+
+#appDialog.hidden {
+  display: none !important;
+}
+
+#appDialog .app-dialog-card {
+  width: 100% !important;
+  max-width: 460px !important;
+  box-sizing: border-box !important;
+
+  padding: 30px !important;
+
+  background: #15171e !important;
+  color: #ffffff !important;
+
+  border: 1px solid #38313a !important;
+  border-radius: 20px !important;
+
+  box-shadow: 0 25px 90px rgba(0, 0, 0, 0.65) !important;
+
+  animation: axomDialogEnter 0.22s ease-out;
+}
+
+#appDialog .app-dialog-icon {
+  width: 46px !important;
+  height: 46px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  margin-bottom: 20px !important;
+
+  border-radius: 13px !important;
+  background: rgba(255, 35, 65, 0.13) !important;
+  color: #ff4655 !important;
+}
+
+#appDialog .app-dialog-card h2 {
+  margin: 0 0 12px !important;
+
+  color: #ffffff !important;
+  font-size: 23px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px;
+}
+
+#appDialog .app-dialog-card p {
+  margin: 0 !important;
+
+  color: #aeb4c0 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+#appDialog .app-dialog-input-wrap {
+  display: block;
+  width: 100% !important;
+  margin-top: 20px !important;
+}
+
+#appDialog .app-dialog-input-wrap.hidden {
+  display: none !important;
+}
+
+#appDialog #appDialogInput {
+  display: block !important;
+
+  width: 100% !important;
+  height: 50px !important;
+
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 15px !important;
+
+  background: #0b0d12 !important;
+  color: #ffffff !important;
+
+  border: 1px solid #343945 !important;
+  border-radius: 10px !important;
+
+  outline: none !important;
+  font-size: 15px !important;
+}
+
+#appDialog #appDialogInput:focus {
+  border-color: #ff263f !important;
+  box-shadow: 0 0 0 3px rgba(255, 38, 63, 0.12) !important;
+}
+
+#appDialog .app-dialog-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+
+  gap: 12px !important;
+  margin-top: 25px !important;
+}
+
+#appDialog .app-dialog-actions button {
+  min-height: 48px !important;
+
+  padding: 0 23px !important;
+
+  border: none !important;
+  border-radius: 11px !important;
+
+  font-size: 15px !important;
+  font-weight: 800 !important;
+
+  cursor: pointer !important;
+  transition: 0.2s ease !important;
+}
+
+#appDialog .app-dialog-cancel {
+  background: #292d36 !important;
+  color: #ffffff !important;
+}
+
+#appDialog .app-dialog-confirm {
+  background: #f51d36 !important;
+  color: #ffffff !important;
+}
+
+#appDialog .app-dialog-actions button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+}
+
+@keyframes axomDialogEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile responsive */
+
+@media (max-width: 520px) {
+  #appDialog {
+    padding: 16px !important;
+  }
+
+  #appDialog .app-dialog-card {
+    max-width: 100% !important;
+    padding: 23px !important;
+  }
+
+  #appDialog .app-dialog-actions {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+
+  #appDialog .app-dialog-actions button {
+    width: 100% !important;
+  }
+}

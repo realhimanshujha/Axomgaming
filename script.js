@@ -219,6 +219,106 @@ $("loginForm").addEventListener("submit", async event => {
   }
 });
 
+/* =====================================
+   FORGOT ADMIN PASSWORD
+===================================== */
+
+$("forgotPasswordButton").addEventListener("click", async () => {
+  const message = $("loginMessage");
+
+  try {
+    // STEP 1: Ask for recovery email.
+    const email = await showPrompt(
+      "Enter your registered admin recovery email.",
+      {
+        title: "Forgot Password",
+        placeholder: "Enter email address",
+        inputType: "email",
+        confirmText: "Send Code"
+      }
+    );
+
+    if (!email) return;
+
+    message.textContent = "Sending verification code...";
+    message.className = "message";
+
+    // STEP 2: Request OTP.
+    const response = await apiRequest({
+      action: "requestAdminPasswordReset",
+      email: email.trim()
+    });
+
+    message.textContent = response.message;
+    message.className = "message success";
+
+    // STEP 3: Ask for OTP.
+    const otp = await showPrompt(
+      "Enter the 6-digit code sent to your recovery email.",
+      {
+        title: "Email Verification",
+        placeholder: "6-digit code",
+        inputType: "text",
+        confirmText: "Verify Code"
+      }
+    );
+
+    if (!otp) return;
+
+    // STEP 4: Ask for new password.
+    const newPassword = await showPrompt(
+      "Create your new password (minimum 12 characters).",
+      {
+        title: "New Password",
+        placeholder: "New password",
+        inputType: "password",
+        confirmText: "Continue"
+      }
+    );
+
+    if (!newPassword) return;
+
+    // STEP 5: Confirm password.
+    const confirmPassword = await showPrompt(
+      "Enter your new password again.",
+      {
+        title: "Confirm Password",
+        placeholder: "Confirm new password",
+        inputType: "password",
+        confirmText: "Reset Password"
+      }
+    );
+
+    if (!confirmPassword) return;
+
+    if (newPassword !== confirmPassword) {
+      throw new Error("Passwords do not match.");
+    }
+
+    if (newPassword.length < 12) {
+      throw new Error("Password must contain at least 12 characters.");
+    }
+
+    message.textContent = "Updating password...";
+    message.className = "message";
+
+    // STEP 6: Verify OTP and update password.
+    const result = await apiRequest({
+      action: "completeAdminPasswordReset",
+      otp: otp.trim(),
+      newPassword: newPassword
+    });
+
+    message.textContent = result.message + " You can now log in.";
+    message.className = "message success";
+
+    $("password").value = "";
+
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "message error";
+  }
+});
 
 /* =====================================
    LOAD DASHBOARD
