@@ -587,6 +587,15 @@ $("bookingForm").addEventListener("submit", async event => {
   button.textContent = "STARTING SESSION...";
 
   try {
+    // STEP 1: Save selected snacks before resetting the form.
+    const snacksToAdd = selectedSnacks
+      .map(item => ({
+        snackId: item.snackId,
+        quantity: Number(item.quantity)
+      }))
+      .filter(item => item.snackId && item.quantity > 0);
+
+    // STEP 2: Create the gaming session.
     const result = await apiRequest({
       action: "startSession",
       token: sessionToken,
@@ -603,6 +612,24 @@ $("bookingForm").addEventListener("submit", async event => {
       players: $("players").value
     });
 
+    // STEP 3: Add snacks to the newly created session.
+    let snackError = "";
+
+    if (snacksToAdd.length > 0) {
+      try {
+        await apiRequest({
+          action: "addSessionSnacks",
+          token: sessionToken,
+          sessionId: result.sessionId,
+          snacks: snacksToAdd
+        });
+
+      } catch (error) {
+        snackError = error.message || "Unable to add snacks.";
+      }
+    }
+
+    // STEP 4: Reset the form.
     selectedSnacks = [];
 
     $("bookingForm").reset();
@@ -614,11 +641,23 @@ $("bookingForm").addEventListener("submit", async event => {
     updateEndTime();
     updateBill();
 
-    message.textContent =
-      `Session started successfully! ID: ${result.sessionId}`;
+    // STEP 5: Show result.
+    if (snackError) {
+      message.textContent =
+        `Session started, but snacks were NOT added: ${snackError}. Session ID: ${result.sessionId}`;
 
-    message.className = "message success";
+      message.className = "message error";
 
+    } else {
+      message.textContent =
+        snacksToAdd.length > 0
+          ? `Session started successfully with snacks! ID: ${result.sessionId}`
+          : `Session started successfully! ID: ${result.sessionId}`;
+
+      message.className = "message success";
+    }
+
+    // STEP 6: Refresh dashboard and live sessions.
     await loadDashboard();
     await loadLiveSessions();
 
