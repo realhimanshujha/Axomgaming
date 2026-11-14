@@ -1,6 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
-const token = sessionStorage.getItem("axomToken");
+const token = localStorage.getItem("axomToken") ||
+              sessionStorage.getItem("axomToken") || "";
 
 const $ = id => document.getElementById(id);
 

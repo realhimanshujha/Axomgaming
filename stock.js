@@ -1,7 +1,8 @@
 const STOCK_API_URL =
   "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
-const stockToken = sessionStorage.getItem("axomToken");
+const stockToken = localStorage.getItem("axomToken") ||
+                   sessionStorage.getItem("axomToken") || "";
 
 const form = document.getElementById("addStockForm");
 const saveButton = document.getElementById("saveButton");

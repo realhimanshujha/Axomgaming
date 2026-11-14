@@ -1,4 +1,4 @@
-const CACHE_NAME = "axom-gaming-pwa-v1";
+const CACHE_NAME = "axom-gaming-pwa-v2";
 
 const APP_SHELL = [
   "./",
@@ -53,56 +53,41 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Do not intercept API calls or cross-origin requests.
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin
-  ) {
-    return;
-  }
+  ) return;
 
-  // Navigation: network first.
-  if (request.mode === "navigate") {
+  // Always fetch JavaScript and HTML from the network first.
+  if (
+    request.mode === "navigate" ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".html")
+  ) {
     event.respondWith(
-      fetch(request)
-        .then(response => {
+      fetch(request).then(response => {
+        if (response.ok) {
           const copy = response.clone();
 
           caches.open(CACHE_NAME).then(cache => {
             cache.put(request, copy);
           });
+        }
 
-          return response;
-        })
-        .catch(async () => {
-          return (
-            await caches.match(request) ||
-            await caches.match("./index.html")
-          );
-        })
+        return response;
+      }).catch(async () => {
+        return await caches.match(request) ||
+               await caches.match("./index.html");
+      })
     );
 
     return;
   }
 
-  // Static assets: cache first, then network.
+  // Other static assets
   event.respondWith(
     caches.match(request).then(cached => {
-      const network = fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, copy);
-            });
-          }
-
-          return response;
-        })
-        .catch(() => cached);
-
-      return cached || network;
+      return cached || fetch(request);
     })
   );
 });

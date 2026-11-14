@@ -3,7 +3,16 @@ const API_URL =
 
 const $ = id => document.getElementById(id);
 
-let sessionToken = sessionStorage.getItem("axomToken") || "";
+let sessionToken =
+  localStorage.getItem("axomToken") ||
+  sessionStorage.getItem("axomToken") ||
+  "";
+
+// Migrate an existing session to persistent storage
+if (sessionToken) {
+  localStorage.setItem("axomToken", sessionToken);
+}
+
 let appData = {
   consoles: [],
   prices: [],
@@ -194,7 +203,7 @@ $("loginForm").addEventListener("submit", async event => {
 
     sessionToken = result.token;
 
-    sessionStorage.setItem("axomToken", sessionToken);
+    localStorage.setItem("axomToken", sessionToken);
 
     $("password").value = "";
 
@@ -248,16 +257,39 @@ async function loadDashboard() {
     await loadLiveSessions();
 
   } catch (error) {
-    sessionStorage.removeItem("axomToken");
-    sessionToken = "";
 
-    $("dashboardPage").classList.add("hidden");
-    $("loginPage").classList.remove("hidden");
+    console.error("Dashboard loading error:", error);
 
-    $("loginMessage").textContent =
-      error.message + " Please log in again.";
+    const sessionExpired =
+      /session expired|invalid session|unauthorized/i.test(
+        String(error.message || "")
+      );
 
-    $("loginMessage").className = "message error";
+    if (sessionExpired) {
+
+      localStorage.removeItem("axomToken");
+      sessionStorage.removeItem("axomToken");
+
+      sessionToken = "";
+
+      $("dashboardPage").classList.add("hidden");
+      $("loginPage").classList.remove("hidden");
+
+      $("loginMessage").textContent =
+        "Your session has expired. Please log in again.";
+
+      $("loginMessage").className = "message error";
+
+    } else {
+
+      // Keep the existing login token during temporary errors.
+      $("loginMessage").textContent =
+        "Unable to connect to the server. Your login session has been preserved. Please refresh and try again.";
+
+      $("loginMessage").className = "message error";
+
+    }
+
   }
 }
 
@@ -645,6 +677,7 @@ $("logoutButton").addEventListener("click", async () => {
     console.error(error);
   }
 
+  localStorage.removeItem("axomToken");
   sessionStorage.removeItem("axomToken");
 
   sessionToken = "";

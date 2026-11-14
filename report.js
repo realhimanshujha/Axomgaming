@@ -1,6 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
-const token = sessionStorage.getItem("axomToken");
+const token = localStorage.getItem("axomToken") ||
+              sessionStorage.getItem("axomToken") || "";
 
 const $ = id => document.getElementById(id);
 
@@ -63,13 +64,15 @@ async function loadReport() {
 
     set("totalSales", money(d.totalSales));
     set("gamingSales", money(d.gamingSales));
+    set("grossGamingSales", money(d.grossGamingSales));
+    set("totalDiscount", money(d.totalDiscount));
     set("snackSales", money(d.snackSales));
     set("totalDues", money(d.totalDues));
 
     set("cashCollected", money(d.cashCollected));
     set("upiCollected", money(d.upiCollected));
     set("otherCollected", money(d.otherCollected));
-    set("dueCollections", money(d.dueCollections));
+    set("dueCollections",money((Number(d.cashCollected) || 0) +(Number(d.upiCollected) || 0) +(Number(d.otherCollected) || 0)));
 
     set("sessionCount", d.sessionCount || 0);
     set("snackQty", d.snackQty || 0);
