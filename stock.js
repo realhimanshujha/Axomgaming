@@ -1,8 +1,8 @@
 const STOCK_API_URL =
   "https://script.google.com/macros/s/AKfycbzhYFcW9RB7zFKMsn0CURttmL-t3j3Uk8PFTyx-FKUBA8mQKXVu0Yb5R4RDsZcGh6Gy4g/exec";
 
-const stockToken = localStorage.getItem("axomToken") ||
-                   sessionStorage.getItem("axomToken") || "";
+const stockToken = sessionStorage.getItem("axomToken") || localStorage.getItem("axomToken") || "";
+const stockRole = (localStorage.getItem("axomRole") || "Admin").toLowerCase();
 
 const form = document.getElementById("addStockForm");
 const saveButton = document.getElementById("saveButton");
@@ -12,6 +12,14 @@ const stockList = document.getElementById("stockList");
 function showMessage(text, type) {
   message.textContent = text;
   message.className = type;
+}
+
+if (stockRole === "staff") {
+  document.querySelectorAll("[data-owner-only], [data-admin-only]").forEach(el => el.remove());
+}
+if (stockRole === "staff") {
+  const copy = document.querySelector(".page-heading p");
+  if (copy) copy.textContent = "View available inventory and record stock purchases.";
 }
 
 async function stockRequest(payload) {
@@ -48,6 +56,25 @@ async function loadCurrentStock() {
     });
 
     stockList.replaceChildren();
+
+    const purchaseSelect = document.getElementById("purchaseSnackId");
+    if (purchaseSelect) {
+      const previousPurchase = purchaseSelect.value;
+      purchaseSelect.replaceChildren();
+      const purchasePlaceholder = document.createElement("option");
+      purchasePlaceholder.value = "";
+      purchasePlaceholder.textContent = "Select a product";
+      purchaseSelect.appendChild(purchasePlaceholder);
+      (result.stock || []).filter(product => product.active).forEach(product => {
+        const option = document.createElement("option");
+        option.value = product.snackId;
+        option.textContent = product.snackName + " · Current: " + product.currentStock;
+        purchaseSelect.appendChild(option);
+      });
+      if ([...purchaseSelect.options].some(option => option.value === previousPurchase)) {
+        purchaseSelect.value = previousPurchase;
+      }
+    }
 
     const editSelect = document.getElementById("editSnackId");
     const previousSelection = editSelect.value;
@@ -319,3 +346,37 @@ document.addEventListener("keydown", (event) => {
     closeStockModal();
   }
 });
+
+const purchaseForm = document.getElementById("purchaseStockForm");
+if (purchaseForm) {
+  purchaseForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = document.getElementById("purchaseButton");
+    const messageEl = document.getElementById("purchaseMessage");
+    const snackId = document.getElementById("purchaseSnackId").value;
+    const quantity = Number(document.getElementById("purchaseQuantity").value);
+    const purchasePrice = Number(document.getElementById("purchasePrice").value);
+    const notes = document.getElementById("purchaseNotes").value.trim();
+
+    if (!snackId) { messageEl.textContent = "Select a product."; messageEl.className = "error"; return; }
+    if (!Number.isInteger(quantity) || quantity < 1) { messageEl.textContent = "Enter a valid quantity."; messageEl.className = "error"; return; }
+    if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) { messageEl.textContent = "Enter a valid purchase price."; messageEl.className = "error"; return; }
+
+    button.disabled = true; button.textContent = "RECORDING PURCHASE...";
+    try {
+      const result = await stockRequest({
+        action: "addStockPurchase", token: stockToken,
+        snackId, quantity, purchasePrice, notes
+      });
+      messageEl.textContent = `${result.message} ${result.snackName}: ${result.previousStock} + ${result.quantityAdded} = ${result.currentStock} packets. Total purchase ₹${result.totalCost}.`;
+      messageEl.className = "success";
+      purchaseForm.reset();
+      await loadCurrentStock();
+    } catch (error) {
+      messageEl.textContent = error.message;
+      messageEl.className = "error";
+    } finally {
+      button.disabled = false; button.textContent = "＋ Record purchase";
+    }
+  });
+}
