@@ -705,178 +705,155 @@ input[type="email"] {
 /* =========================================
    AXOM GAMING - FORGOT PASSWORD DIALOG FIX
 ========================================= */
-
+/* Dialog overlay */
 #appDialog {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 99999 !important;
-
-  display: flex;
-  align-items: center !important;
-  justify-content: center !important;
-
-  padding: 20px !important;
-  background: rgba(0, 0, 0, 0.82) !important;
-  backdrop-filter: blur(9px);
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(5px);
 }
 
-#appDialog.hidden {
-  display: none !important;
+/* Dialog box */
+#appDialog > .app-dialog-box {
+    width: 100%;
+    max-width: 675px;
+    padding: 32px;
+    background: #17191f;
+    border: 1px solid #49343a;
+    border-radius: 21px;
+    color: #f5f5f5;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+    animation: dialogAppear 0.2s ease-out;
 }
 
-#appDialog .app-dialog-card {
-  width: 100% !important;
-  max-width: 460px !important;
-  box-sizing: border-box !important;
-
-  padding: 30px !important;
-
-  background: #15171e !important;
-  color: #ffffff !important;
-
-  border: 1px solid #38313a !important;
-  border-radius: 20px !important;
-
-  box-shadow: 0 25px 90px rgba(0, 0, 0, 0.65) !important;
-
-  animation: axomDialogEnter 0.22s ease-out;
+/* Icon */
+#appDialogIcon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    border-radius: 13px;
+    background: rgba(255, 35, 55, 0.12);
+    color: #ff5265;
+    font-size: 22px;
 }
 
-#appDialog .app-dialog-icon {
-  width: 46px !important;
-  height: 46px !important;
-
-  display: grid !important;
-  place-items: center !important;
-
-  margin-bottom: 20px !important;
-
-  border-radius: 13px !important;
-  background: rgba(255, 35, 65, 0.13) !important;
-  color: #ff4655 !important;
+/* Heading */
+#appDialogTitle {
+    margin: 0 0 18px;
+    color: #f5f5f5;
+    font-size: 27px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.7px;
 }
 
-#appDialog .app-dialog-card h2 {
-  margin: 0 0 12px !important;
-
-  color: #ffffff !important;
-  font-size: 23px !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.5px;
+/* Message */
+#appDialogMessage {
+    margin-bottom: 16px;
+    color: #b5bac5;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
-#appDialog .app-dialog-card p {
-  margin: 0 !important;
-
-  color: #aeb4c0 !important;
-  font-size: 15px !important;
-  line-height: 1.6 !important;
+/* Input */
+#appDialogInput {
+    width: 100%;
+    max-width: 275px;
+    height: 43px;
+    padding: 9px 12px;
+    background: #101116;
+    border: 1px solid #555b66;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
 }
 
-#appDialog .app-dialog-input-wrap {
-  display: block;
-  width: 100% !important;
-  margin-top: 20px !important;
+#appDialogInput:focus {
+    border-color: #ff263d;
+    box-shadow: 0 0 0 2px rgba(255, 38, 61, 0.2);
 }
 
-#appDialog .app-dialog-input-wrap.hidden {
-  display: none !important;
-}
-
-#appDialog #appDialogInput {
-  display: block !important;
-
-  width: 100% !important;
-  height: 50px !important;
-
-  box-sizing: border-box !important;
-  margin: 0 !important;
-  padding: 0 15px !important;
-
-  background: #0b0d12 !important;
-  color: #ffffff !important;
-
-  border: 1px solid #343945 !important;
-  border-radius: 10px !important;
-
-  outline: none !important;
-  font-size: 15px !important;
-}
-
-#appDialog #appDialogInput:focus {
-  border-color: #ff263f !important;
-  box-shadow: 0 0 0 3px rgba(255, 38, 63, 0.12) !important;
-}
-
+/* Buttons container */
 #appDialog .app-dialog-actions {
-  display: flex !important;
-  justify-content: flex-end !important;
-  align-items: center !important;
-
-  gap: 12px !important;
-  margin-top: 25px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
 }
 
-#appDialog .app-dialog-actions button {
-  min-height: 48px !important;
-
-  padding: 0 23px !important;
-
-  border: none !important;
-  border-radius: 11px !important;
-
-  font-size: 15px !important;
-  font-weight: 800 !important;
-
-  cursor: pointer !important;
-  transition: 0.2s ease !important;
+/* Cancel button */
+#appDialogCancel {
+    padding: 14px 21px;
+    background: #292d36;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
 }
 
-#appDialog .app-dialog-cancel {
-  background: #292d36 !important;
-  color: #ffffff !important;
+/* Confirm button */
+#appDialogConfirm {
+    padding: 14px 21px;
+    background: #ff1f35;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
 }
 
-#appDialog .app-dialog-confirm {
-  background: #f51d36 !important;
-  color: #ffffff !important;
+#appDialogConfirm:hover {
+    background: #df1027;
+    transform: translateY(-1px);
 }
 
-#appDialog .app-dialog-actions button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.12);
+#appDialogCancel:hover {
+    background: #393e49;
 }
 
-@keyframes axomDialogEnter {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Animation */
+@keyframes dialogAppear {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-/* Mobile responsive */
+/* Mobile */
+@media (max-width: 600px) {
+    #appDialog > .app-dialog-box {
+        padding: 24px 20px;
+        border-radius: 17px;
+    }
 
-@media (max-width: 520px) {
-  #appDialog {
-    padding: 16px !important;
-  }
+    #appDialogTitle {
+        font-size: 23px;
+    }
 
-  #appDialog .app-dialog-card {
-    max-width: 100% !important;
-    padding: 23px !important;
-  }
+    #appDialog .app-dialog-actions {
+        gap: 9px;
+    }
 
-  #appDialog .app-dialog-actions {
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-  }
-
-  #appDialog .app-dialog-actions button {
-    width: 100% !important;
-  }
+    #appDialogCancel,
+    #appDialogConfirm {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
 }

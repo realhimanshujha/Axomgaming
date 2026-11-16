@@ -30,8 +30,8 @@
         <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span><span>Overview</span></a>
         <a class="nav-link" href="membership.html"><span class="nav-icon">♙</span><span>Membership desk</span></a>
         <a class="nav-link active" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span><i></i></a>
-        <a class="nav-link" href="dues.html"><span class="nav-icon">₹</span>Dues Management</a>
-        <a class="nav-link" href="report.html"><span class="nav-icon">▥</span><span>Monthly Report</span></a>
+        <a class="nav-link" href="dues.html"><span class="nav-icon">₹</span><span>Dues management</span></a>
+        <a class="nav-link owner-only-link" data-owner-only href="report.html"><span class="nav-icon">▥</span><span>Monthly Revenue</span></a>
       </nav>
 
       <div class="sidebar-footer">
@@ -61,7 +61,7 @@
         </section>
 
         <section class="workspace-grid">
-          <section class="panel add-panel" aria-labelledby="addStockHeading">
+          <section class="panel add-panel" data-admin-only aria-labelledby="addStockHeading">
             <div class="panel-heading">
               <div class="panel-icon add-icon">＋</div>
               <div>
@@ -109,7 +109,41 @@
           </section>
         </section>
 
-        <section class="panel edit-panel">
+
+        <section class="panel purchase-panel" aria-labelledby="purchaseStockHeading">
+          <div class="panel-heading">
+            <div class="panel-icon add-icon">＋</div>
+            <div>
+              <div class="panel-kicker">STOCK REPLENISHMENT</div>
+              <h2 id="purchaseStockHeading">Record stock purchase</h2>
+              <p>Record new packets purchased and update available stock.</p>
+            </div>
+          </div>
+          <form id="purchaseStockForm" class="stock-form">
+            <div class="field">
+              <label for="purchaseSnackId">Product</label>
+              <select id="purchaseSnackId" required><option value="">Loading products…</option></select>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="purchaseQuantity">Quantity purchased</label>
+                <div class="input-wrap"><input id="purchaseQuantity" type="number" min="1" step="1" required placeholder="e.g. 24"><span>PACKETS</span></div>
+              </div>
+              <div class="field">
+                <label for="purchasePrice">Purchase price per packet (₹)</label>
+                <div class="input-wrap price-input"><span>₹</span><input id="purchasePrice" type="number" min="0.01" step="0.01" required placeholder="e.g. 18"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="purchaseNotes">Notes (optional)</label>
+              <input id="purchaseNotes" type="text" maxlength="250" placeholder="Supplier / invoice reference">
+            </div>
+            <button id="purchaseButton" type="submit" class="primary-button">＋ Record purchase</button>
+            <p id="purchaseMessage" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="panel edit-panel" data-admin-only>
           <div class="edit-copy">
             <div class="panel-icon edit-icon">✎</div>
             <div>
@@ -163,6 +197,20 @@
         .catch(error => console.error("AXOM app offline setup failed:", error));
     });
   }
+</script>
+
+<script>
+(function () {
+  const role = (
+    localStorage.getItem("axomRole") || ""
+  ).trim().toLowerCase();
+
+  // Only Admin can see Monthly Revenue
+  if (role !== "admin") {
+    document.querySelectorAll("[data-owner-only]")
+      .forEach(link => link.remove());
+  }
+})();
 </script>
 
 </body>

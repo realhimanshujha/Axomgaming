@@ -21,6 +21,30 @@ let appData = {
 
 let selectedSnacks = [];
 
+function applyRoleUI(role) {
+  const isStaff = String(role || "Admin").toLowerCase() === "staff";
+  document.body.classList.toggle("staff-mode", isStaff);
+
+  // Staff can access daily operations: memberships, dues and stock purchases.
+  // Owner-only financial reporting and configuration remain hidden.
+  document.querySelectorAll('a[href*="report.html"], a[href*="monthly"]').forEach(link => {
+    link.style.display = isStaff ? "none" : "";
+  });
+
+  const notificationButton = $("notificationSettingsButton");
+  if (notificationButton) notificationButton.style.display = isStaff ? "none" : "";
+
+  document.querySelectorAll("[data-admin-only]").forEach(element => {
+    element.style.display = isStaff ? "none" : "";
+  });
+
+  const panelLabel = document.querySelector(".admin-controls span");
+  if (panelLabel) panelLabel.textContent = isStaff ? "STAFF PANEL" : "OWNER PANEL";
+
+  const sidebarLabel = document.querySelector(".sidebar-bottom small");
+  if (sidebarLabel) sidebarLabel.textContent = isStaff ? "AXOM GAMING · STAFF" : "AXOM GAMING · OWNER";
+}
+
 
 /* =====================================
    API REQUEST
@@ -334,6 +358,10 @@ async function loadDashboard() {
     appData.consoles = data.consoles;
     appData.prices = data.prices;
     appData.snacks = data.snacks;
+
+    localStorage.setItem("axomRole", data.role || "Admin");
+    localStorage.setItem("axomUsername", data.username || "");
+    applyRoleUI(data.role || "Admin");
 
     $("loginPage").classList.add("hidden");
     $("dashboardPage").classList.remove("hidden");
@@ -818,6 +846,8 @@ $("logoutButton").addEventListener("click", async () => {
 
   localStorage.removeItem("axomToken");
   sessionStorage.removeItem("axomToken");
+  localStorage.removeItem("axomRole");
+  localStorage.removeItem("axomUsername");
 
   sessionToken = "";
   selectedSnacks = [];
@@ -1021,6 +1051,17 @@ function renderLiveSessions() {
     const actions = document.createElement("div");
     actions.className = "session-actions";
 
+    const adjust = document.createElement("button");
+    adjust.className = "extend-button";
+    adjust.textContent = "Adjust Duration";
+
+    adjust.addEventListener("click", () => {
+      adjustSessionDuration(
+        session.sessionId,
+        session.durationMinutes
+      );
+    });
+
     const extend = document.createElement("button");
     extend.className = "extend-button";
     extend.textContent = "Extend Time";
@@ -1045,7 +1086,7 @@ function renderLiveSessions() {
       closeSession(session.sessionId);
     });
 
-    actions.append(extend, snacks, finish);
+    actions.append(adjust, extend, snacks, finish);
 
     card.append(header, details, timer, bill, actions);
 
@@ -1135,35 +1176,52 @@ function updateSessionTimers() {
 /* EXTEND SESSION */
 
 async function extendSession(sessionId) {
-  const duration = await showPrompt(
-    "Enter additional gaming time in minutes.\n" +
-    "Allowed: 15, 30, 60, 90, 120, etc."
+  const session = liveSessions.find(item =>
+    item.sessionId === sessionId
   );
 
-  if (duration === null) return;
+  if (!session) {
+    showToast("Session not found.", "error");
+    return;
+  }
 
-  const addedMinutes = Number(duration);
+  const input = await showPrompt(
+    "Enter additional gaming time in minutes.\nAllowed: 15, 30, 45, 60, 75, etc.",
+    {
+      title: "Extend Gaming Time",
+      placeholder: "15, 30, 45, 60...",
+      inputType: "number",
+      confirmText: "Calculate"
+    }
+  );
+
+  if (input === null) return;
+
+  const addedMinutes = Number(input);
 
   if (
     !Number.isInteger(addedMinutes) ||
     addedMinutes < 15 ||
-    (addedMinutes !== 15 && addedMinutes % 30 !== 0)
+    addedMinutes % 15 !== 0
   ) {
-    showToast(
-      "Enter 15 minutes or a duration in 30-minute intervals."
-    );
+    showToast("Enter a valid duration in 15-minute intervals.", "error");
     return;
   }
 
-  if (!(await showConfirm(
-    `Extend this session by ${addedMinutes} minutes?`,
+  const newDuration = Number(session.durationMinutes) + addedMinutes;
+
+  const confirmed = await showConfirm(
+    `Current duration: ${session.durationMinutes} minutes\n` +
+    `Additional time: ${addedMinutes} minutes\n` +
+    `New total duration: ${newDuration} minutes\n\n` +
+    `The total gaming price will be recalculated using your price list.`,
     {
-      title: "Extend session",
-      confirmText: "Extend time"
+      title: "Confirm Extension",
+      confirmText: "Extend Time"
     }
-  ))) {
-    return;
-  }
+  );
+
+  if (!confirmed) return;
 
   try {
     const result = await apiRequest({
@@ -1173,16 +1231,86 @@ async function extendSession(sessionId) {
       addedMinutes: addedMinutes
     });
 
+    const difference = Number(result.addedAmount || 0);
+
     showToast(
-      "Session extended successfully.\n" +
-      "New ending time: " + result.newEndTime +
-      "\nAdditional charge: ₹" + result.addedAmount
+      `Session extended successfully.\n` +
+      `New ending time: ${result.newEndTime}\n` +
+      `New gaming bill: ₹${result.newGamingAmount}\n` +
+      `Price difference: ${difference >= 0 ? "+" : "-"}₹${Math.abs(difference)}`,
+      "success"
     );
 
     await loadLiveSessions();
+    await loadDashboard();
 
   } catch (error) {
-    showToast(error.message);
+    showToast(error.message, "error");
+  }
+}
+
+async function adjustSessionDuration(sessionId, currentDuration) {
+  const input = await showPrompt(
+    "Enter the new TOTAL playing duration in minutes.\n" +
+    "Examples: 30, 45, 60, 75, 90...",
+    {
+      title: "Adjust Session Duration",
+      placeholder: String(currentDuration),
+      inputType: "number",
+      inputValue: String(currentDuration),
+      confirmText: "Calculate"
+    }
+  );
+
+  if (input === null) return;
+
+  const newDuration = Number(input);
+
+  if (
+    !Number.isInteger(newDuration) ||
+    newDuration < 15 ||
+    newDuration % 15 !== 0
+  ) {
+    showToast("Enter a valid total duration in 15-minute intervals.", "error");
+    return;
+  }
+
+  const confirmed = await showConfirm(
+    `Previous duration: ${currentDuration} minutes\n` +
+    `New total duration: ${newDuration} minutes\n\n` +
+    `The complete gaming charge will be recalculated.\n` +
+    `Snack charges will remain unchanged.`,
+    {
+      title: "Confirm Duration Adjustment",
+      confirmText: "Update Duration"
+    }
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const result = await apiRequest({
+      action: "adjustSessionDuration",
+      token: sessionToken,
+      sessionId: sessionId,
+      durationMinutes: newDuration
+    });
+
+    const difference = Number(result.priceDifference || 0);
+
+    showToast(
+      `Duration updated successfully.\n` +
+      `New ending time: ${result.newEndTime}\n` +
+      `New gaming bill: ₹${result.newGamingAmount}\n` +
+      `Price difference: ${difference >= 0 ? "+" : "-"}₹${Math.abs(difference)}`,
+      "success"
+    );
+
+    await loadLiveSessions();
+    await loadDashboard();
+
+  } catch (error) {
+    showToast(error.message, "error");
   }
 }
 
