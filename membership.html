@@ -24,6 +24,7 @@
     <a class="side-link" href="stock.html"><span>▤</span> Stock & inventory</a>
     <a class="side-link" href="dues.html"><span>₹</span> Dues Management</a>
     <a class="side-link" href="report.html"><span>▥</span> Monthly Report</a>
+    <a class="side-link owner-only-link" data-admin-only href="settings.html"><span>⚙</span><span>Settings</span></a>
     <div class="sidebar-bottom"><span class="online-dot"></span> System operational<small>AXOM GAMING · ADMIN</small></div>
   </aside>
   <main class="wrap">
@@ -114,6 +115,28 @@
         .catch(error => console.error("AXOM app offline setup failed:", error));
     });
   }
+</script>
+
+<script>
+(function () {
+  const role = (
+    localStorage.getItem("axomRole") || ""
+  ).trim().toLowerCase();
+
+  if (role === "staff") {
+    // Hide owner-only Monthly Report links
+    document.querySelectorAll('a[href="report.html"]')
+      .forEach(link => link.remove());
+
+    // Update workspace label
+    document.querySelectorAll(".top-actions span")
+      .forEach(el => {
+        if (el.textContent.trim() === "Admin workspace") {
+          el.textContent = "Staff workspace";
+        }
+      });
+  }
+})();
 </script>
 
 </body>

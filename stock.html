@@ -32,6 +32,8 @@
         <a class="nav-link active" href="stock.html"><span class="nav-icon">▤</span><span>Stock & inventory</span><i></i></a>
         <a class="nav-link" href="dues.html"><span class="nav-icon">₹</span><span>Dues management</span></a>
         <a class="nav-link owner-only-link" data-owner-only href="report.html"><span class="nav-icon">▥</span><span>Monthly Revenue</span></a>
+        <a class="nav-link owner-only-link" data-admin-only href="settings.html"><span class="nav-icon">⚙</span><span>Settings</span></a>
+
       </nav>
 
       <div class="sidebar-footer">
@@ -197,20 +199,6 @@
         .catch(error => console.error("AXOM app offline setup failed:", error));
     });
   }
-</script>
-
-<script>
-(function () {
-  const role = (
-    localStorage.getItem("axomRole") || ""
-  ).trim().toLowerCase();
-
-  // Only Admin can see Monthly Revenue
-  if (role !== "admin") {
-    document.querySelectorAll("[data-owner-only]")
-      .forEach(link => link.remove());
-  }
-})();
 </script>
 
 </body>

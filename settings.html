@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08090c">
+  <title>AXOM GAMING | Owner Settings</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .settings-wrap{max-width:1400px;margin:auto;padding:30px 34px 60px 294px}
+    .settings-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 22px}
+    .settings-tab{background:#20232a;border:1px solid #383d47;color:#cbd0d9;padding:12px 18px;border-radius:9px;font-weight:750}
+    .settings-tab.active{background:#43151c;border-color:#a52b39;color:#fff}
+    .settings-view{display:none}.settings-view.active{display:block}
+    .settings-inline-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:end;margin:18px 0}
+    .settings-table input,.settings-table select{min-width:90px;width:100%;background:#090b0f;color:#fff;border:1px solid #303640;border-radius:7px;padding:9px}
+    .settings-table button{border:1px solid #6d2931;background:#32151a;color:#ffb4bb;border-radius:8px;padding:8px 11px;font-weight:700}
+    .permission-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+    .permission-grid label{display:flex;align-items:center;gap:10px;padding:14px;background:#0b0d11;border:1px solid #292d36;border-radius:10px;color:#d7dbe2;font-size:12px}
+    .permission-grid input{accent-color:#f32132;width:17px;height:17px}
+    .settings-note{padding:14px;border:1px solid #5b3c22;background:#241a10;color:#e8c99e;border-radius:10px;font-size:12px;line-height:1.6}
+    .settings-status{font-size:12px;min-height:22px}.settings-status.error{color:#ff7581}.settings-status.success{color:#31d18b}
+    .back-link{color:#ff6875;text-decoration:none;font-size:12px;font-weight:700}
+    @media(max-width:1000px){.settings-wrap{padding-left:245px}.settings-inline-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:700px){.settings-wrap{padding:22px 14px 40px}.settings-inline-form,.permission-grid{grid-template-columns:1fr}.settings-tabs{overflow:auto;flex-wrap:nowrap}.settings-tab{white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
+    <div class="admin-controls"><span id="ownerLabel">OWNER SETTINGS</span><button class="logout-button" id="logoutButton" type="button">Logout</button></div>
+  </header>
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="side-label">WORKSPACE</div>
+    <a class="side-link" href="index.html"><span>▦</span> Overview</a>
+    <div class="side-label">MANAGEMENT</div>
+    <a class="side-link" href="membership.html"><span>♙</span> Membership desk</a>
+    <a class="side-link" href="stock.html"><span>▤</span> Stock & inventory</a>
+    <a class="side-link" href="dues.html"><span>₹</span> Dues Management</a>
+    <a class="side-link" href="report.html"><span>▥</span> Monthly Report</a>
+    <a class="side-link active" href="settings.html"><span>⚙</span> Settings</a>
+    <div class="sidebar-bottom"><span class="online-dot"></span> System operational<small>AXOM GAMING · OWNER</small></div>
+  </aside>
+  <main class="settings-wrap">
+    <div class="page-heading"><div><h1>Owner Settings</h1><p>Manage gaming prices, staff accounts and staff permissions.</p></div><a class="back-link" href="index.html">← Back to dashboard</a></div>
+    <div class="settings-tabs" role="tablist">
+      <button class="settings-tab active" data-tab="pricing" type="button">Pricing</button>
+      <button class="settings-tab" data-tab="staff" type="button">Staff Accounts</button>
+      <button class="settings-tab" data-tab="permissions" type="button">Staff Permissions</button>
+    </div>
+
+    <section class="panel settings-view active" id="pricingView">
+      <div class="panel-heading"><div><h2>Gaming Pricing</h2><p>Edit existing rates or add a new duration/player price.</p></div><button class="secondary-button" id="refreshButton" type="button">Refresh</button></div>
+      <div class="table-wrapper"><table class="settings-table"><thead><tr><th>Console</th><th>Players</th><th>Duration (min)</th><th>Price (₹)</th></tr></thead><tbody id="priceRows"><tr><td colspan="4" class="empty-state">Loading prices...</td></tr></tbody></table></div>
+      <div class="section-divider"><h3>Add pricing row</h3></div>
+      <div class="settings-inline-form">
+        <div class="field"><label for="newConsole">Console</label><select id="newConsole"><option>PS5</option><option>PS4</option></select></div>
+        <div class="field"><label for="newPlayers">Players</label><select id="newPlayers"><option>Solo</option><option>Duo</option><option>Trio</option><option>Quad</option></select></div>
+        <div class="field"><label for="newDuration">Duration (minutes)</label><input id="newDuration" type="number" min="15" step="15" value="60"></div>
+        <div class="field"><label for="newPrice">Price (₹)</label><input id="newPrice" type="number" min="0" step="1" placeholder="Price"></div>
+      </div>
+      <button class="secondary-button" id="addPriceButton" type="button">＋ Add price row</button>
+      <div class="form-actions"><button class="primary-button" id="savePricesButton" type="button">Save all pricing</button></div>
+      <p class="settings-status" id="priceMessage"></p>
+    </section>
+
+    <section class="panel settings-view" id="staffView">
+      <div class="panel-heading"><div><h2>Staff Accounts</h2><p>Create accounts, reset passwords and deactivate access.</p></div></div>
+      <div class="section-divider"><h3>Create staff account</h3><p>Username 3–40 characters; password minimum 6 characters.</p></div>
+      <div class="settings-inline-form">
+        <div class="field"><label for="staffUsername">Username</label><input id="staffUsername" maxlength="40" autocomplete="off" placeholder="e.g. staff02"></div>
+        <div class="field"><label for="staffPassword">Temporary password</label><input id="staffPassword" type="password" minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>
+        <button class="primary-button" id="createStaffButton" type="button">Create staff</button>
+      </div>
+      <p class="settings-status" id="staffMessage"></p>
+      <div class="section-divider"><h3>Existing staff</h3><p>Deactivate rather than delete accounts to preserve audit history.</p></div>
+      <div class="table-wrapper"><table class="settings-table"><thead><tr><th>Username</th><th>Status</th><th>Actions</th></tr></thead><tbody id="staffRows"><tr><td colspan="3" class="empty-state">Loading staff...</td></tr></tbody></table></div>
+    </section>
+
+    <section class="panel settings-view" id="permissionsView">
+      <div class="panel-heading"><div><h2>Staff Permissions</h2><p>Choose what each staff account is allowed to do.</p></div></div>
+      <div class="field"><label for="permissionStaff">Select staff account</label><select id="permissionStaff"><option value="">Choose staff...</option></select></div>
+      <div class="permission-grid" id="permissionOptions">
+        <label><input type="checkbox" value="bookings"> Create customer bookings</label>
+        <label><input type="checkbox" value="sessions"> Manage live sessions</label>
+        <label><input type="checkbox" value="membership"> Membership desk and bookings</label>
+        <label><input type="checkbox" value="dues"> View dues and collect payments</label>
+        <label><input type="checkbox" value="stock"> View stock and record purchases</label>
+        <label><input type="checkbox" value="dailyRevenue"> View daily revenue summary</label>
+      </div>
+      <div class="form-actions"><button class="primary-button" id="savePermissionsButton" type="button">Save permissions</button></div>
+      <p class="settings-status" id="permissionMessage"></p>
+      <p class="settings-note">Monthly reports, pricing changes, staff administration, membership creation/renewal, stock adjustments and system configuration remain owner-only. These permissions are checked by the Apps Script backend.</p>
+    </section>
+  </main>
+  <script src="settings.js"></script>
+</body>
+</html>
