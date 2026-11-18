@@ -467,3 +467,89 @@ syncStartTime();
 preview();
 
 load();
+
+// UPCOMING BOOKINGS POPUP
+
+const bookingsModal = $("bookingsModal");
+
+function openBookingsPopup() {
+    bookingsModal.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+function closeBookingsPopup() {
+    bookingsModal.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+$("openBookingsModal").addEventListener("click", openBookingsPopup);
+
+$("closeBookingsModal").addEventListener("click", closeBookingsPopup);
+
+$("doneBookingsModal").addEventListener("click", closeBookingsPopup);
+
+bookingsModal.addEventListener("click", event => {
+    if (event.target === bookingsModal) {
+        closeBookingsPopup();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        bookingsModal.classList.contains("active")
+    ) {
+        closeBookingsPopup();
+    }
+});
+
+// =====================================
+// PAST BOOKINGS POPUP
+// =====================================
+
+const pastBookingsModal = $("pastBookingsModal");
+
+function openPastBookingsPopup() {
+    pastBookingsModal.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+function closePastBookingsPopup() {
+    pastBookingsModal.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+// Open popup
+$("openPastBookingsModal").addEventListener(
+    "click",
+    openPastBookingsPopup
+);
+
+// Close button
+$("closePastBookingsModal").addEventListener(
+    "click",
+    closePastBookingsPopup
+);
+
+// Done button
+$("donePastBookingsModal").addEventListener(
+    "click",
+    closePastBookingsPopup
+);
+
+// Click outside popup
+pastBookingsModal.addEventListener("click", event => {
+    if (event.target === pastBookingsModal) {
+        closePastBookingsPopup();
+    }
+});
+
+// Escape key
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        pastBookingsModal.classList.contains("active")
+    ) {
+        closePastBookingsPopup();
+    }
+});

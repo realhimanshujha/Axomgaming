@@ -46,6 +46,96 @@
 <label>Payment method<select id="paymentMethod" required><option value="">Select method</option><option>Cash</option><option>UPI</option></select></label></div>
 <div class="payment"><b>Payment status</b><label><input id="advanceReceived" type="checkbox"> Advance received</label><label><input id="notPaid" type="checkbox"> Not paid</label><small>Select only one. If neither is selected, payment is marked Paid in Full.</small></div>
 <div id="bookingPreview" class="preview">Choose a date, time and duration.</div><div class="actions"><button id="saveBtn" class="primary" type="submit">＋ Create pre-booking</button></div></form></section>
-<section class="list"><div class="listhead"><div><small>SCHEDULED RESERVATIONS</small><h2>New pre-bookings</h2><p>Upcoming bookings that have not finished.</p></div><b id="upcomingCount" class="count">0</b></div><div id="upcomingList" class="cards">Loading…</div></section>
-<section class="list"><div class="listhead"><div><small>BOOKING HISTORY</small><h2>Old pre-bookings</h2><p>Reservations whose scheduled end time has passed.</p></div><b id="pastCount" class="count">0</b></div><div id="pastList" class="cards">Loading…</div></section>
-</main></div><script src="prebook.js"></script></body></html>
+<section class="upcoming-summary">
+    <div>
+        <small>SCHEDULED RESERVATIONS</small>
+        <h2>Upcoming Pre-bookings</h2>
+        <p>View and manage your upcoming reservations.</p>
+    </div>
+
+    <button type="button" id="openBookingsModal" class="view-bookings-btn">
+        View All Bookings
+        <span id="upcomingCount" class="count">0</span>
+    </button>
+</section>
+<!-- PAST BOOKINGS SUMMARY -->
+<section class="upcoming-summary">
+    <div>
+        <small>BOOKING HISTORY</small>
+        <h2>Past Bookings</h2>
+        <p>View your completed and previous reservations.</p>
+    </div>
+
+    <button type="button" id="openPastBookingsModal"
+            class="view-bookings-btn">
+        View Past Bookings
+        <span id="pastCount" class="count">0</span>
+    </button>
+</section>
+</main>
+</div>
+
+<!-- UPCOMING BOOKINGS POPUP -->
+<div class="bookings-modal" id="bookingsModal">
+    <div class="bookings-modal-content">
+
+        <div class="bookings-modal-header">
+            <div>
+                <small>RESERVATION MANAGEMENT</small>
+                <h2>Upcoming Bookings</h2>
+                <p>All your scheduled customer reservations.</p>
+            </div>
+
+            <button type="button" id="closeBookingsModal">&times;</button>
+        </div>
+
+        <div class="bookings-modal-body">
+            <div id="upcomingList" class="cards">Loading...</div>
+        </div>
+
+        <div class="bookings-modal-footer">
+            <span>Upcoming reservations</span>
+            <button type="button" id="doneBookingsModal">Done</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- PAST BOOKINGS POPUP -->
+<div class="bookings-modal" id="pastBookingsModal">
+
+    <div class="bookings-modal-content">
+
+        <div class="bookings-modal-header">
+            <div>
+                <small>BOOKING HISTORY</small>
+                <h2>Past Bookings</h2>
+                <p>All your previous customer reservations.</p>
+            </div>
+
+            <button type="button" id="closePastBookingsModal">
+                &times;
+            </button>
+        </div>
+
+        <div class="bookings-modal-body">
+            <div id="pastList" class="cards">
+                Loading...
+            </div>
+        </div>
+
+        <div class="bookings-modal-footer">
+            <span>Previous reservations</span>
+
+            <button type="button" id="donePastBookingsModal">
+                Done
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="prebook.js"></script>
+</body>
+</html>

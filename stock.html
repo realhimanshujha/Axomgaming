@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#08090d">
+  <meta name="theme-color" content="#090b10">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="AXOM GAMING">
@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="stock.css">
+  <link rel="stylesheet" href="stock.css?v=inventory-fix-2">
 </head>
 <body>
   <div class="app-shell">
@@ -56,11 +56,26 @@
       <main class="page-content">
         <section class="page-heading">
           <div>
-            <div class="eyebrow"><span class="eyebrow-line"></span> INVENTORY MANAGEMENT</div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> CAFE OPERATIONS / INVENTORY</div>
             <h1>Stock <span>&</span> Inventory</h1>
-            <p>Keep your cafe essentials organised. Add products, monitor quantities and update prices from one place.</p>
+            <p>Track what is on the shelf, update quantities and keep every product organised.</p>
           </div>
-          <div class="heading-badge"><span class="status-dot"></span> LIVE INVENTORY</div>
+          <div class="heading-badge"><span class="status-dot"></span> INVENTORY LIVE</div>
+        </section>
+
+        <section class="inventory-overview" aria-label="Inventory overview">
+          <article class="overview-card">
+            <span class="overview-icon">▦</span>
+            <div><small>ACTIVE PRODUCTS</small><strong id="totalProducts">—</strong></div>
+          </article>
+          <article class="overview-card">
+            <span class="overview-icon">▤</span>
+            <div><small>TOTAL PACKETS</small><strong id="totalPackets">—</strong></div>
+          </article>
+          <article class="overview-card">
+            <span class="overview-icon warning-icon">!</span>
+            <div><small>LOW STOCK ITEMS</small><strong id="lowStockCount">—</strong></div>
+          </article>
         </section>
 
         <section class="workspace-grid">
@@ -104,7 +119,13 @@
               </div>
               <div class="live-pill"><span class="status-dot"></span> LIVE</div>
             </div>
-            <div class="inventory-column-labels"><span>PRODUCT</span><span>AVAILABLE STOCK</span></div>
+            <div class="inventory-tools">
+              <label class="search-box" for="stockSearch">
+                <span aria-hidden="true">⌕</span>
+                <input id="stockSearch" type="search" placeholder="Search products..." autocomplete="off">
+              </label>
+              <span class="product-count" id="visibleProductCount">Loading products</span>
+            </div>
             <div id="stockList" class="stock-list" aria-live="polite">
               <p class="empty-state">Loading inventory...</p>
             </div>
@@ -172,7 +193,28 @@
       <form id="editStockForm">
         <div class="field">
           <label for="editSnackId">Select product</label>
-          <select id="editSnackId" required><option value="">Loading products...</option></select>
+          <div class="custom-product-select" id="editProductDropdown">
+              <button type="button" class="product-select-trigger" id="editProductTrigger">
+                  <span id="editProductSelected">Select a product</span>
+                  <span class="select-arrow">⌄</span>
+              </button>
+
+              <div class="product-dropdown-menu" id="editProductMenu">
+                  <input
+                      type="search"
+                      id="editProductSearch"
+                      placeholder="Search products..."
+                      autocomplete="off"
+                  >
+                  <div class="product-dropdown-list" id="editProductOptions">
+                      <div class="product-option-empty">Loading products...</div>
+                  </div>
+              </div>
+          </div>
+
+          <select id="editSnackId" style="display:none">
+              <option value="">Select a product</option>
+          </select>
         </div>
         <div class="form-row">
           <div class="field">
@@ -191,7 +233,7 @@
     </div>
   </div>
 
-  <script src="stock.js"></script>
+  <script src="stock.js?v=inventory-fix-2"></script>
 
 <script>
   if ("serviceWorker" in navigator) {

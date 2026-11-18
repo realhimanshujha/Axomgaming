@@ -8,15 +8,19 @@ const form = document.getElementById("addStockForm");
 const saveButton = document.getElementById("saveButton");
 const message = document.getElementById("message");
 const stockList = document.getElementById("stockList");
+const stockSearch = document.getElementById("stockSearch");
+
+let activeStockProducts = [];
 
 function showMessage(text, type) {
   message.textContent = text;
-  message.className = type;
+  message.className = type || "";
 }
 
 document.querySelectorAll("[data-admin-only]").forEach(el => {
   el.style.display = stockRole === "staff" ? "none" : "";
 });
+
 if (stockRole === "staff") {
   const copy = document.querySelector(".page-heading p");
   if (copy) copy.textContent = "View available inventory and record stock purchases.";
@@ -28,24 +32,94 @@ async function stockRequest(payload) {
     body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    throw new Error("Could not connect to the server.");
-  }
+  if (!response.ok) throw new Error("Could not connect to the server.");
 
   const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.message || "Something went wrong.");
-  }
-
+  if (!result.success) throw new Error(result.message || "Something went wrong.");
   return result;
 }
 
-function addTextCell(parent, text, tag = "div") {
-  const element = document.createElement(tag);
-  element.textContent = text;
-  parent.appendChild(element);
-  return element;
+function createElement(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = String(text);
+  return el;
+}
+
+function renderStockProducts(query = "") {
+  const term = query.trim().toLowerCase();
+  const filtered = activeStockProducts.filter(product =>
+    String(product.snackName || "").toLowerCase().includes(term) ||
+    String(product.snackId || "").toLowerCase().includes(term)
+  );
+
+  stockList.replaceChildren();
+
+  const count = document.getElementById("visibleProductCount");
+  if (count) {
+    count.textContent = term
+      ? `${filtered.length} of ${activeStockProducts.length} products`
+      : `${activeStockProducts.length} products`;
+  }
+
+  if (!filtered.length) {
+    const empty = createElement(
+      "div",
+      "inventory-empty",
+      term ? "No products match your search." : "No products in inventory yet."
+    );
+    stockList.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(product => {
+    const row = createElement("article", "stock-item");
+    const left = createElement("div", "stock-product");
+    const firstLetter = String(product.snackName || "?").trim().charAt(0).toUpperCase();
+    const icon = createElement("span", "stock-product-icon", firstLetter || "?");
+    const copy = createElement("div", "stock-product-copy");
+    const name = createElement("strong", "stock-item-name", product.snackName || "Unnamed product");
+    const details = createElement(
+      "small",
+      "stock-item-details",
+      `${product.snackId || "SKU"} · ₹${product.sellingPrice} per packet`
+    );
+
+    copy.append(name, details);
+    left.append(icon, copy);
+
+    const quantity = Number(product.currentStock) || 0;
+    const right = createElement("div", quantity <= 2 ? "stock-quantity low" : "stock-quantity");
+    right.append(
+      createElement("strong", "", quantity),
+      createElement("small", "", quantity === 1 ? "packet" : "packets")
+    );
+
+    row.append(left, right);
+    stockList.appendChild(row);
+  });
+}
+
+if (stockSearch) {
+  stockSearch.addEventListener("input", () => renderStockProducts(stockSearch.value));
+}
+
+function updateOverview(products) {
+  const totalProducts = document.getElementById("totalProducts");
+  const totalPackets = document.getElementById("totalPackets");
+  const lowStockCount = document.getElementById("lowStockCount");
+
+  if (totalProducts) totalProducts.textContent = products.length;
+  if (totalPackets) {
+    totalPackets.textContent = products.reduce(
+      (sum, product) => sum + (Number(product.currentStock) || 0), 0
+    );
+  }
+  if (lowStockCount) {
+    lowStockCount.textContent = products.filter(
+      product => Number(product.currentStock) <= 2
+    ).length;
+  }
 }
 
 async function loadCurrentStock() {
@@ -55,90 +129,65 @@ async function loadCurrentStock() {
       token: stockToken
     });
 
-    stockList.replaceChildren();
+    const allProducts = result.stock || [];
+    activeStockProducts = allProducts.filter(product => product.active);
 
     const purchaseSelect = document.getElementById("purchaseSnackId");
     if (purchaseSelect) {
       const previousPurchase = purchaseSelect.value;
       purchaseSelect.replaceChildren();
-      const purchasePlaceholder = document.createElement("option");
-      purchasePlaceholder.value = "";
-      purchasePlaceholder.textContent = "Select a product";
-      purchaseSelect.appendChild(purchasePlaceholder);
-      (result.stock || []).filter(product => product.active).forEach(product => {
-        const option = document.createElement("option");
+      purchaseSelect.appendChild(createElement("option", "", "Select a product"));
+      purchaseSelect.options[0].value = "";
+
+      activeStockProducts.forEach(product => {
+        const option = createElement(
+          "option",
+          "",
+          `${product.snackName} · Current: ${product.currentStock}`
+        );
         option.value = product.snackId;
-        option.textContent = product.snackName + " · Current: " + product.currentStock;
         purchaseSelect.appendChild(option);
       });
+
       if ([...purchaseSelect.options].some(option => option.value === previousPurchase)) {
         purchaseSelect.value = previousPurchase;
       }
     }
 
     const editSelect = document.getElementById("editSnackId");
-    const previousSelection = editSelect.value;
+    if (editSelect) {
+      const previousSelection = editSelect.value;
+      editSelect.replaceChildren();
+      const placeholder = createElement("option", "", "Select a product");
+      placeholder.value = "";
+      editSelect.appendChild(placeholder);
 
-    editSelect.replaceChildren();
+      activeStockProducts.forEach(product => {
+        const option = createElement("option", "", product.snackName);
+        option.value = product.snackId;
+        option.dataset.quantity = product.currentStock;
+        option.dataset.price = product.sellingPrice;
+        editSelect.appendChild(option);
+      });
 
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select a snack";
-    editSelect.appendChild(placeholder);
-
-    (result.stock || []).forEach(product => {
-    if (!product.active) return;
-
-    const option = document.createElement("option");
-    option.value = product.snackId;
-    option.textContent = product.snackName;
-
-    option.dataset.quantity = product.currentStock;
-    option.dataset.price = product.sellingPrice;
-
-    editSelect.appendChild(option);
-    });
-
-    if ([...editSelect.options].some(
-    option => option.value === previousSelection
-    )) {
-    editSelect.value = previousSelection;
+      if ([...editSelect.options].some(option => option.value === previousSelection)) {
+        editSelect.value = previousSelection;
+      }
+      updateEditFields();
+      refreshEditProductDropdown();
     }
 
-    updateEditFields();
-
-    const products = (result.stock || [])
-      .filter(product => product.active);
-
-    if (products.length === 0) {
-      stockList.textContent = "No products added yet.";
-      return;
-    }
-
-    products.forEach(product => {
-      const row = document.createElement("div");
-      row.className = "stock-item";
-
-      const left = document.createElement("div");
-
-      addTextCell(left, product.snackName);
-
-      const details = document.createElement("div");
-      details.className = "muted";
-      details.textContent = `${product.snackId} · ₹${product.sellingPrice} each`;
-
-      left.appendChild(details);
-
-      const right = document.createElement("div");
-      right.style.textAlign = "right";
-      right.textContent = `${product.currentStock} packets`;
-
-      row.append(left, right);
-      stockList.appendChild(row);
-    });
+    updateOverview(activeStockProducts);
+    renderStockProducts(stockSearch ? stockSearch.value : "");
 
   } catch (error) {
-    stockList.textContent = error.message;
+    stockList.replaceChildren(createElement("div", "inventory-empty error", error.message));
+    const count = document.getElementById("visibleProductCount");
+    if (count) count.textContent = "Unable to load";
+    ["totalProducts", "totalPackets", "lowStockCount"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = "—";
+    });
   }
 }
 
@@ -146,39 +195,24 @@ form.addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!stockToken) {
-    showMessage(
-      "Your admin session has expired. Return to the dashboard and log in again.",
-      "error"
-    );
+    showMessage("Your session has expired. Log in again through the dashboard.", "error");
     return;
   }
 
-  const snackName =
-    document.getElementById("snackName").value.trim();
+  const snackName = document.getElementById("snackName").value.trim();
+  const quantity = Number(document.getElementById("quantity").value);
+  const sellingPrice = Number(document.getElementById("sellingPrice").value);
 
-  const quantity =
-    Number(document.getElementById("quantity").value);
-
-  const sellingPrice =
-    Number(document.getElementById("sellingPrice").value);
-
-  if (!snackName) {
-    showMessage("Enter a snack name.", "error");
-    return;
-  }
-
+  if (!snackName) return showMessage("Enter a product name.", "error");
   if (!Number.isInteger(quantity) || quantity < 1) {
-    showMessage("Enter a valid quantity.", "error");
-    return;
+    return showMessage("Enter a valid opening quantity.", "error");
   }
-
   if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-    showMessage("Enter a valid selling price.", "error");
-    return;
+    return showMessage("Enter a valid selling price.", "error");
   }
 
   saveButton.disabled = true;
-  saveButton.textContent = "ADDING STOCK...";
+  saveButton.textContent = "ADDING PRODUCT…";
 
   try {
     const result = await stockRequest({
@@ -190,193 +224,255 @@ form.addEventListener("submit", async event => {
     });
 
     showMessage(
-      `${result.message} ${result.snackName} added with ` +
-      `${result.quantity} packets at ₹${result.sellingPrice} each.`,
+      `${result.message} ${result.snackName} added: ${result.quantity} packets at ₹${result.sellingPrice} each.`,
       "success"
     );
-
     form.reset();
-
     await loadCurrentStock();
-
   } catch (error) {
     showMessage(error.message, "error");
-
   } finally {
     saveButton.disabled = false;
-    saveButton.textContent = "+ ADD STOCK";
+    saveButton.innerHTML = "<span>＋</span> Add product to stock";
   }
 });
 
 if (!stockToken) {
-  showMessage(
-    "Please log in through the admin dashboard first.",
-    "error"
-  );
+  showMessage("Please log in through the admin dashboard first.", "error");
 } else {
   loadCurrentStock();
 }
 
 function updateEditFields() {
   const select = document.getElementById("editSnackId");
-  const option = select.options[select.selectedIndex];
+  const option = select && select.options[select.selectedIndex];
 
   document.getElementById("editQuantity").value =
     option && option.value ? option.dataset.quantity : "";
-
   document.getElementById("editSellingPrice").value =
     option && option.value ? option.dataset.price : "";
 }
 
-document.getElementById("editSnackId").addEventListener(
-  "change",
-  updateEditFields
-);
+document.getElementById("editSnackId").addEventListener("change", updateEditFields);
 
-document.getElementById("editStockForm").addEventListener(
-  "submit",
-  async event => {
-    event.preventDefault();
+document.getElementById("editStockForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
-    const select = document.getElementById("editSnackId");
-    const button = document.getElementById("editStockButton");
-    const message = document.getElementById("editMessage");
+  const select = document.getElementById("editSnackId");
+  const button = document.getElementById("editStockButton");
+  const messageEl = document.getElementById("editMessage");
+  const snackId = select.value;
+  const quantity = Number(document.getElementById("editQuantity").value);
+  const sellingPrice = Number(document.getElementById("editSellingPrice").value);
 
-    const snackId = select.value;
-    const quantity = Number(
-      document.getElementById("editQuantity").value
-    );
-    const sellingPrice = Number(
-      document.getElementById("editSellingPrice").value
-    );
-
-    if (!snackId) {
-      message.textContent = "Please select a snack.";
-      message.className = "error";
-      return;
-    }
-
-    if (!Number.isInteger(quantity) || quantity < 0) {
-      message.textContent = "Enter a valid stock quantity.";
-      message.className = "error";
-      return;
-    }
-
-    if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-      message.textContent = "Enter a valid selling price.";
-      message.className = "error";
-      return;
-    }
-
-    const confirmed = confirm(
-      "Save these changes?\n\n" +
-      "Stock will be SET to " + quantity +
-      " packets, not increased by that amount."
-    );
-
-    if (!confirmed) return;
-
-    button.disabled = true;
-    button.textContent = "SAVING...";
-
-    try {
-      const result = await stockRequest({
-        action: "editSnackStock",
-        token: stockToken,
-        snackId: snackId,
-        quantity: quantity,
-        sellingPrice: sellingPrice
-      });
-
-      message.textContent =
-        result.message + " " + result.snackName +
-        ": " + result.quantity + " packets.";
-
-      message.className = "success";
-
-      closeStockModal();
-        await loadCurrentStock();   
-
-      await loadCurrentStock();
-
-    } catch (error) {
-      message.textContent = error.message;
-      message.className = "error";
-
-    } finally {
-      button.disabled = false;
-      button.textContent = "SAVE CHANGES";
-    }
+  if (!snackId) {
+    messageEl.textContent = "Please select a product.";
+    messageEl.className = "error";
+    return;
   }
-);
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    messageEl.textContent = "Enter a valid stock quantity.";
+    messageEl.className = "error";
+    return;
+  }
+  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
+    messageEl.textContent = "Enter a valid selling price.";
+    messageEl.className = "error";
+    return;
+  }
 
-// Edit Stock Modal
+  if (!confirm(
+    `Save changes to this product?\n\nStock will be SET to ${quantity} packets, not added to the current quantity.`
+  )) return;
+
+  button.disabled = true;
+  button.textContent = "SAVING…";
+
+  try {
+    const result = await stockRequest({
+      action: "editSnackStock",
+      token: stockToken,
+      snackId,
+      quantity,
+      sellingPrice
+    });
+
+    messageEl.textContent =
+      `${result.message} ${result.snackName}: ${result.quantity} packets.`;
+    messageEl.className = "success";
+    closeStockModal();
+    await loadCurrentStock();
+  } catch (error) {
+    messageEl.textContent = error.message;
+    messageEl.className = "error";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save changes";
+  }
+});
+
 const editStockModal = document.getElementById("editStockModal");
-const openEditStockModal = document.getElementById("openEditStockModal");
-const closeEditStockModal = document.getElementById("closeEditStockModal");
-
 function openStockModal() {
   editStockModal.classList.add("active");
   document.body.classList.add("modal-open");
 }
-
 function closeStockModal() {
   editStockModal.classList.remove("active");
   document.body.classList.remove("modal-open");
 }
-
-openEditStockModal.addEventListener("click", () => {
-  openStockModal();
+document.getElementById("openEditStockModal").addEventListener("click", openStockModal);
+document.getElementById("closeEditStockModal").addEventListener("click", closeStockModal);
+editStockModal.addEventListener("click", event => {
+  if (event.target === editStockModal) closeStockModal();
 });
-
-closeEditStockModal.addEventListener("click", () => {
-  closeStockModal();
-});
-
-// Close when clicking outside the popup
-editStockModal.addEventListener("click", (event) => {
-  if (event.target === editStockModal) {
-    closeStockModal();
-  }
-});
-
-// Close when pressing Escape
-document.addEventListener("keydown", (event) => {
+document.addEventListener("keydown", event => {
   if (event.key === "Escape" && editStockModal.classList.contains("active")) {
     closeStockModal();
   }
 });
 
 const purchaseForm = document.getElementById("purchaseStockForm");
-if (purchaseForm) {
-  purchaseForm.addEventListener("submit", async event => {
-    event.preventDefault();
-    const button = document.getElementById("purchaseButton");
-    const messageEl = document.getElementById("purchaseMessage");
-    const snackId = document.getElementById("purchaseSnackId").value;
-    const quantity = Number(document.getElementById("purchaseQuantity").value);
-    const purchasePrice = Number(document.getElementById("purchasePrice").value);
-    const notes = document.getElementById("purchaseNotes").value.trim();
+purchaseForm.addEventListener("submit", async event => {
+  event.preventDefault();
 
-    if (!snackId) { messageEl.textContent = "Select a product."; messageEl.className = "error"; return; }
-    if (!Number.isInteger(quantity) || quantity < 1) { messageEl.textContent = "Enter a valid quantity."; messageEl.className = "error"; return; }
-    if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) { messageEl.textContent = "Enter a valid purchase price."; messageEl.className = "error"; return; }
+  const button = document.getElementById("purchaseButton");
+  const messageEl = document.getElementById("purchaseMessage");
+  const snackId = document.getElementById("purchaseSnackId").value;
+  const quantity = Number(document.getElementById("purchaseQuantity").value);
+  const purchasePrice = Number(document.getElementById("purchasePrice").value);
+  const notes = document.getElementById("purchaseNotes").value.trim();
 
-    button.disabled = true; button.textContent = "RECORDING PURCHASE...";
-    try {
-      const result = await stockRequest({
-        action: "addStockPurchase", token: stockToken,
-        snackId, quantity, purchasePrice, notes
-      });
-      messageEl.textContent = `${result.message} ${result.snackName}: ${result.previousStock} + ${result.quantityAdded} = ${result.currentStock} packets. Total purchase ₹${result.totalCost}.`;
-      messageEl.className = "success";
-      purchaseForm.reset();
-      await loadCurrentStock();
-    } catch (error) {
-      messageEl.textContent = error.message;
-      messageEl.className = "error";
-    } finally {
-      button.disabled = false; button.textContent = "＋ Record purchase";
+  if (!snackId) {
+    messageEl.textContent = "Select a product.";
+    messageEl.className = "error";
+    return;
+  }
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    messageEl.textContent = "Enter a valid purchase quantity.";
+    messageEl.className = "error";
+    return;
+  }
+  if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) {
+    messageEl.textContent = "Enter a valid purchase price.";
+    messageEl.className = "error";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "RECORDING PURCHASE…";
+
+  try {
+    const result = await stockRequest({
+      action: "addStockPurchase",
+      token: stockToken,
+      snackId,
+      quantity,
+      purchasePrice,
+      notes
+    });
+
+    messageEl.textContent =
+      `${result.message} ${result.snackName}: ${result.previousStock} + ${result.quantityAdded} = ${result.currentStock} packets. Total purchase ₹${result.totalCost}.`;
+    messageEl.className = "success";
+    purchaseForm.reset();
+    await loadCurrentStock();
+  } catch (error) {
+    messageEl.textContent = error.message;
+    messageEl.className = "error";
+  } finally {
+    button.disabled = false;
+    button.textContent = "＋ Record purchase";
+  }
+});
+
+// CUSTOM SEARCHABLE EDIT STOCK DROPDOWN
+
+const editProductSelect = document.getElementById("editSnackId");
+const editProductDropdown = document.getElementById("editProductDropdown");
+const editProductTrigger = document.getElementById("editProductTrigger");
+const editProductSelected = document.getElementById("editProductSelected");
+const editProductMenu = document.getElementById("editProductMenu");
+const editProductSearch = document.getElementById("editProductSearch");
+const editProductOptions = document.getElementById("editProductOptions");
+
+function renderEditProductOptions(search = "") {
+    const term = search.toLowerCase().trim();
+
+    editProductOptions.replaceChildren();
+
+    const options = [...editProductSelect.options].filter(option =>
+        option.value &&
+        option.textContent.toLowerCase().includes(term)
+    );
+
+    if (!options.length) {
+        editProductOptions.innerHTML =
+            '<div class="product-option-empty">No products found.</div>';
+        return;
     }
-  });
+
+    options.forEach(option => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "product-option";
+
+        if (option.value === editProductSelect.value) {
+            button.classList.add("selected");
+        }
+
+        button.textContent = option.textContent;
+
+        button.addEventListener("click", () => {
+            editProductSelect.value = option.value;
+
+            editProductSelect.dispatchEvent(
+                new Event("change", { bubbles: true })
+            );
+
+            editProductSelected.textContent = option.textContent;
+
+            editProductDropdown.classList.remove("open");
+            editProductSearch.value = "";
+
+            renderEditProductOptions();
+        });
+
+        editProductOptions.appendChild(button);
+    });
 }
+
+function refreshEditProductDropdown() {
+    const selected = editProductSelect.options[
+        editProductSelect.selectedIndex
+    ];
+
+    editProductSelected.textContent =
+        selected && selected.value
+            ? selected.textContent
+            : "Select a product";
+
+    renderEditProductOptions();
+}
+
+editProductTrigger.addEventListener("click", () => {
+    const isOpen = editProductDropdown.classList.toggle("open");
+
+    if (isOpen) {
+        editProductSearch.value = "";
+        renderEditProductOptions();
+        editProductSearch.focus();
+    }
+});
+
+editProductSearch.addEventListener("input", () => {
+    renderEditProductOptions(editProductSearch.value);
+});
+
+document.addEventListener("click", event => {
+    if (!editProductDropdown.contains(event.target)) {
+        editProductDropdown.classList.remove("open");
+    }
+});
+
+editProductSelect.addEventListener("change", refreshEditProductDropdown);
