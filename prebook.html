@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b10"><title>AXOM GAMING | Pre-Bookings</title><link rel="stylesheet" href="prebook.css"></head>
+<body>
+<aside class="sidebar"><a class="brand" href="index.html"><b>AXOM <i>GAMING</i></b><small>CONTROL CENTER</small></a><p>WORKSPACE</p><nav><a href="index.html">Overview</a><a class="active" href="prebook.html">Pre-Bookings</a><a href="membership.html">Membership desk</a><a href="stock.html">Stock &amp; Inventory</a><a href="dues.html">Dues Management</a></nav><footer>● System operational<br><small>AXOM GAMING · WORKSPACE</small></footer></aside>
+<div class="main"><header><span>WORKSPACE　/　<b>Pre-Bookings</b></span><a href="index.html">← Dashboard</a></header><main>
+<section class="heading"><div><small>RESERVATIONS / ADVANCE BOOKINGS</small><h1>Pre-<em>Bookings</em></h1><p>Create reservations and track upcoming and completed slots.</p></div><button id="refreshBtn" class="secondary">↻ Refresh</button></section>
+<div id="notice" class="notice hidden"></div>
+<section class="panel"><div class="panelhead"><div><small>RESERVE A SLOT</small><h2>New pre-booking</h2><p>Enter the reservation details.</p></div><b class="tag">NEW ENTRY</b></div>
+<form id="prebookForm"><div class="grid">
+<label>Customer name<input id="customerName" maxlength="80" required placeholder="Enter customer name"></label>
+<label>Phone number<input id="phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10-digit mobile number"></label>
+<label>Console<select id="consoleType" required><option value="">Select console</option><option>PS5</option><option>PS4</option><option>Whole Cafe</option></select></label>
+<label>Custom price (₹)<input id="price" type="number" min="0" step="1" required placeholder="Enter price"></label>
+<label>Booking date<input id="bookingDate" type="date" required></label>
+<label>Start time
+  <div class="time-picker">
+    <select id="startHour" aria-label="Start hour" required>
+      <option value="10" selected>10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+    </select>
+    <select id="startMinute" aria-label="Start minute">
+      <option value="00" selected>00</option>
+      <option value="15">15</option>
+      <option value="30">30</option>
+      <option value="45">45</option>
+    </select>
+    <select id="startPeriod" aria-label="AM or PM">
+      <option value="AM" selected>AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+  <input id="startTime" type="hidden" required>
+</label>
+<label>Duration<select id="durationPreset"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="custom">Custom duration</option></select></label>
+<label id="customDurationWrap" class="hidden">Custom duration (minutes)<input id="customDuration" type="number" min="15" step="15" placeholder="e.g. 150"></label>
+<label>Payment method<select id="paymentMethod" required><option value="">Select method</option><option>Cash</option><option>UPI</option></select></label></div>
+<div class="payment"><b>Payment status</b><label><input id="advanceReceived" type="checkbox"> Advance received</label><label><input id="notPaid" type="checkbox"> Not paid</label><small>Select only one. If neither is selected, payment is marked Paid in Full.</small></div>
+<div id="bookingPreview" class="preview">Choose a date, time and duration.</div><div class="actions"><button id="saveBtn" class="primary" type="submit">＋ Create pre-booking</button></div></form></section>
+<section class="list"><div class="listhead"><div><small>SCHEDULED RESERVATIONS</small><h2>New pre-bookings</h2><p>Upcoming bookings that have not finished.</p></div><b id="upcomingCount" class="count">0</b></div><div id="upcomingList" class="cards">Loading…</div></section>
+<section class="list"><div class="listhead"><div><small>BOOKING HISTORY</small><h2>Old pre-bookings</h2><p>Reservations whose scheduled end time has passed.</p></div><b id="pastCount" class="count">0</b></div><div id="pastList" class="cards">Loading…</div></section>
+</main></div><script src="prebook.js"></script></body></html>

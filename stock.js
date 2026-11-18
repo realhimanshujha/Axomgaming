@@ -14,9 +14,9 @@ function showMessage(text, type) {
   message.className = type;
 }
 
-if (stockRole === "staff") {
-  document.querySelectorAll("[data-owner-only], [data-admin-only]").forEach(el => el.remove());
-}
+document.querySelectorAll("[data-admin-only]").forEach(el => {
+  el.style.display = stockRole === "staff" ? "none" : "";
+});
 if (stockRole === "staff") {
   const copy = document.querySelector(".page-heading p");
   if (copy) copy.textContent = "View available inventory and record stock purchases.";

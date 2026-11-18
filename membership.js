@@ -15,13 +15,6 @@ if (currentRole === "staff") {
   const pageSub = document.querySelector(".hero .sub");
   if (pageSub) pageSub.textContent = "Find existing members and book their available PS5 membership hours.";
 }
-// Staff must not see owner-only navigation on any workspace page.
-if (currentRole === "staff") {
-  document.querySelectorAll("[data-owner-only], [data-admin-only]").forEach(el => el.remove());
-  const deskLabel = document.querySelector(".top-actions span:nth-child(2)");
-  if (deskLabel) deskLabel.textContent = "Staff workspace";
-}
-
 
 
 async function api(action, payload = {}) {
