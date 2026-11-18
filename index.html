@@ -42,11 +42,53 @@
     <header class="topbar">
       <a class="brand" href="#overview"><img src="axom-logo.jpeg" alt="AXOM GAMING logo"><span>AXOM <b>GAMING</b><small>CONTROL CENTER</small></span></a>
       <div class="admin-controls">
-        <span>ADMIN PANEL</span>
-        <button id="notificationSettingsButton" class="logout-button" type="button">
-          Notification Settings
-        </button>
-        <button id="logoutButton" class="logout-button">Logout</button>
+        <span class="admin-panel-label">ADMIN PANEL</span>
+
+        <div class="profile-menu" id="profileMenu">
+          <button
+            type="button"
+            class="profile-trigger"
+            id="profileMenuButton"
+            aria-expanded="false"
+            aria-controls="profileDropdown"
+            aria-label="Open account menu"
+          >
+            <span class="profile-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2c-4.1 0-7.4 2.1-7.4 4.7V21h14.8v-2.3c0-2.6-3.3-4.7-7.4-4.7Z"/>
+              </svg>
+            </span>
+            <span class="profile-name-wrap">
+              <strong id="profileDisplayName">Account</strong>
+              <small id="profileDisplayRole">Owner</small>
+            </span>
+            <span class="profile-chevron" aria-hidden="true">⌄</span>
+          </button>
+
+          <div class="profile-dropdown" id="profileDropdown" hidden>
+            <div class="profile-dropdown-heading">
+              <span class="profile-avatar small" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2c-4.1 0-7.4 2.1-7.4 4.7V21h14.8v-2.3c0-2.6-3.3-4.7-7.4-4.7Z"/>
+                </svg>
+              </span>
+              <span>
+                <strong id="dropdownDisplayName">Account</strong>
+                <small id="dropdownDisplayRole">Owner account</small>
+              </span>
+            </div>
+
+            <button id="notificationSettingsButton" class="profile-menu-action" type="button">
+              <span class="menu-action-icon" aria-hidden="true">♧</span>
+              <span>Notification settings</span>
+            </button>
+
+            <button id="logoutButton" class="profile-menu-action logout-action" type="button">
+              <span class="menu-action-icon" aria-hidden="true">↪</span>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 

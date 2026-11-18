@@ -127,7 +127,18 @@ $("searchMembers").addEventListener("input",renderMembers);
 $("memberSelect").addEventListener("change",updateMemberCard);
 $("bookingForm").durationMinutes.addEventListener("change",updateSummary);
 $("bookingForm").startTime.addEventListener("input",updateSummary);
-const localToday = new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
-$("bookingDate").min = localToday; $("bookingDate").value = localToday;
+// ALLOW BOOKINGS FROM YESTERDAY ONWARD
+const now = new Date();
+
+const localToday = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60000
+).toISOString().slice(0, 10);
+
+const yesterday = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60000 - 86400000
+).toISOString().slice(0, 10);
+
+$("bookingDate").min = yesterday;
+$("bookingDate").value = localToday;
 updateSummary();
 refresh();

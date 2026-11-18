@@ -202,6 +202,90 @@ function showPrompt(message, options = {}) {
   });
 }
 
+/* =====================================
+   PROFILE DROPDOWN
+===================================== */
+
+function updateProfileMenu(username, role) {
+    const cleanName = String(username || "Account").trim() || "Account";
+
+    const cleanRole =
+        String(role || "Admin").toLowerCase() === "staff"
+            ? "Staff account"
+            : "Owner account";
+
+    ["profileDisplayName", "dropdownDisplayName"].forEach(id => {
+        const element = $(id);
+        if (element) element.textContent = cleanName;
+    });
+
+    ["profileDisplayRole", "dropdownDisplayRole"].forEach(id => {
+        const element = $(id);
+        if (element) element.textContent = cleanRole;
+    });
+}
+
+
+// DROPDOWN ELEMENTS
+const profileMenu = $("profileMenu");
+const profileMenuButton = $("profileMenuButton");
+const profileDropdown = $("profileDropdown");
+
+
+// CLOSE DROPDOWN
+function closeProfileMenu() {
+    if (!profileMenuButton || !profileDropdown) return;
+
+    profileDropdown.hidden = true;
+
+    profileMenuButton.setAttribute("aria-expanded", "false");
+
+    profileMenu?.classList.remove("open");
+}
+
+
+// TOGGLE DROPDOWN
+profileMenuButton?.addEventListener("click", event => {
+    event.stopPropagation();
+
+    const willOpen = profileDropdown.hidden;
+
+    profileDropdown.hidden = !willOpen;
+
+    profileMenuButton.setAttribute(
+        "aria-expanded",
+        String(willOpen)
+    );
+
+    profileMenu.classList.toggle("open", willOpen);
+});
+
+
+// CLOSE WHEN CLICKING OUTSIDE
+document.addEventListener("click", event => {
+    if (profileMenu && !profileMenu.contains(event.target)) {
+        closeProfileMenu();
+    }
+});
+
+
+// CLOSE WITH ESCAPE KEY
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        closeProfileMenu();
+    }
+});
+
+
+// CLOSE AFTER SELECTING AN OPTION
+$("notificationSettingsButton")?.addEventListener("click", () => {
+    closeProfileMenu();
+});
+
+$("logoutButton")?.addEventListener("click", () => {
+    closeProfileMenu();
+});
+
 
 /* =====================================
    LOGIN
@@ -361,7 +445,13 @@ async function loadDashboard() {
 
     localStorage.setItem("axomRole", data.role || "Admin");
     localStorage.setItem("axomUsername", data.username || "");
+
     applyRoleUI(data.role || "Admin");
+
+    updateProfileMenu(
+        data.username || "Account",
+        data.role || "Admin"
+    );
 
     $("loginPage").classList.add("hidden");
     $("dashboardPage").classList.remove("hidden");
@@ -449,20 +539,193 @@ function populateConsoles() {
 
 function populateSnacks() {
   const select = $("snackSelect");
+  if (!select) return;
 
-  select.innerHTML =
-    '<option value="">Select Snack</option>';
+  // Keep the original select as the source of truth so existing
+  // add-snack, stock validation and booking code continue to work.
+  select.innerHTML = '<option value="">Select Snack</option>';
 
   appData.snacks.forEach(snack => {
     const option = document.createElement("option");
-
     option.value = snack.snackId;
-
     option.textContent =
       `${snack.snackName} — ₹${snack.sellingPrice} | Stock: ${snack.currentStock}`;
-
     select.appendChild(option);
   });
+
+  // Rebuild the visual dropdown whenever stock is refreshed.
+  const oldPicker = select.parentElement.querySelector(".snack-picker");
+  if (oldPicker) oldPicker.remove();
+
+  select.classList.add("snack-native-select");
+
+  const picker = document.createElement("div");
+  picker.className = "snack-picker";
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "snack-picker-trigger";
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.innerHTML = `
+    <span class="snack-picker-current">
+      <strong>Select a snack</strong>
+      <small>Search and choose from available stock</small>
+    </span>
+    <span class="snack-picker-arrow" aria-hidden="true">⌄</span>
+  `;
+
+  const menu = document.createElement("div");
+  menu.className = "snack-picker-menu";
+  menu.hidden = true;
+
+  const searchWrap = document.createElement("div");
+  searchWrap.className = "snack-picker-search-wrap";
+
+  const search = document.createElement("input");
+  search.type = "search";
+  search.className = "snack-picker-search";
+  search.placeholder = "Search snacks...";
+  search.autocomplete = "off";
+  search.setAttribute("aria-label", "Search snacks");
+
+  searchWrap.appendChild(search);
+
+  const list = document.createElement("div");
+  list.className = "snack-picker-list";
+  list.setAttribute("role", "listbox");
+
+  menu.append(searchWrap, list);
+  picker.append(trigger, menu);
+  select.insertAdjacentElement("afterend", picker);
+
+  function setSelectedSnack(snackId) {
+    select.value = snackId;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const selected = appData.snacks.find(item =>
+      String(item.snackId) === String(snackId)
+    );
+
+    const current = trigger.querySelector(".snack-picker-current");
+    if (selected) {
+      current.innerHTML = "";
+      const name = document.createElement("strong");
+      name.textContent = selected.snackName;
+      const detail = document.createElement("small");
+      detail.textContent =
+        `₹${selected.sellingPrice} · ${selected.currentStock} in stock`;
+      current.append(name, detail);
+    } else {
+      current.innerHTML = `
+        <strong>Select a snack</strong>
+        <small>Search and choose from available stock</small>
+      `;
+    }
+  }
+
+  function renderOptions(query = "") {
+    list.replaceChildren();
+    const normalizedQuery = query.trim().toLowerCase();
+
+    const matches = appData.snacks.filter(snack =>
+      String(snack.snackName || "").toLowerCase().includes(normalizedQuery)
+    );
+
+    if (!matches.length) {
+      const empty = document.createElement("div");
+      empty.className = "snack-picker-empty";
+      empty.textContent = "No snacks found. Try another name.";
+      list.appendChild(empty);
+      return;
+    }
+
+    matches.forEach(snack => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "snack-picker-option";
+      item.setAttribute("role", "option");
+      item.setAttribute(
+        "aria-selected",
+        String(String(select.value) === String(snack.snackId))
+      );
+
+      const info = document.createElement("span");
+      info.className = "snack-picker-option-info";
+
+      const name = document.createElement("strong");
+      name.textContent = snack.snackName;
+
+      const stock = document.createElement("small");
+      stock.textContent = `${snack.currentStock} available`;
+
+      const price = document.createElement("span");
+      price.className = "snack-picker-price";
+      price.textContent = `₹${snack.sellingPrice}`;
+
+      info.append(name, stock);
+      item.append(info, price);
+
+      if (Number(snack.currentStock) <= 0) {
+        item.disabled = true;
+        item.classList.add("out-of-stock");
+        stock.textContent = "Out of stock";
+      } else {
+        item.addEventListener("click", () => {
+          setSelectedSnack(snack.snackId);
+          menu.hidden = true;
+          trigger.setAttribute("aria-expanded", "false");
+          picker.classList.remove("is-open");
+          search.value = "";
+          renderOptions();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  trigger.addEventListener("click", () => {
+    const open = menu.hidden;
+    menu.hidden = !open;
+    trigger.setAttribute("aria-expanded", String(open));
+    picker.classList.toggle("is-open", open);
+
+    if (open) {
+      renderOptions(search.value);
+      search.focus();
+    }
+  });
+
+  search.addEventListener("input", () => renderOptions(search.value));
+
+  document.addEventListener("click", event => {
+    if (!picker.contains(event.target)) {
+      menu.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      picker.classList.remove("is-open");
+    }
+  });
+
+  search.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      menu.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      picker.classList.remove("is-open");
+      trigger.focus();
+    }
+  });
+
+  // Reset visual selection together with the booking form.
+  const bookingForm = $("bookingForm");
+  if (bookingForm && !bookingForm.dataset.snackPickerResetBound) {
+    bookingForm.dataset.snackPickerResetBound = "true";
+    bookingForm.addEventListener("reset", () => {
+      setTimeout(() => setSelectedSnack(""), 0);
+    });
+  }
+
+  renderOptions();
 }
 
 
