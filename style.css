@@ -2074,3 +2074,200 @@ select {
     max-height: min(230px, 35vh);
   }
 }
+
+
+/* =====================================
+   FIX: SNACK PICKER DROPDOWN
+===================================== */
+
+.snack-picker {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.snack-picker-trigger {
+    width: 100%;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #151923 !important;
+    color: #ffffff !important;
+    border: 1px solid #343b49;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.snack-picker-current {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.snack-picker-current strong {
+    font-size: 14px !important;
+    color: #ffffff !important;
+}
+
+.snack-picker-current small {
+    font-size: 11px !important;
+    color: #a0a8b8 !important;
+}
+
+.snack-picker-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #151923 !important;
+    border: 1px solid #343b49;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.55);
+}
+
+.snack-picker-menu[hidden] {
+    display: none !important;
+}
+
+.snack-picker-search-wrap {
+    margin-bottom: 10px;
+}
+
+.snack-picker-search {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    background: #0d1119 !important;
+    color: #ffffff !important;
+    border: 1px solid #343b49;
+    border-radius: 8px;
+    font-size: 13px !important;
+}
+
+.snack-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 230px;
+    overflow-y: auto;
+}
+
+.snack-picker-option {
+    width: 100%;
+    min-height: 54px;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px !important;
+    background: #202633 !important;
+    color: #ffffff !important;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.snack-picker-option:hover {
+    background: #2c3545 !important;
+    border-color: #e63946;
+}
+
+.snack-picker-option-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.snack-picker-option-info strong {
+    font-size: 13px !important;
+    color: #ffffff !important;
+}
+
+.snack-picker-option-info small {
+    font-size: 11px !important;
+    color: #a0a8b8 !important;
+}
+
+.snack-picker-price {
+    font-size: 13px !important;
+    font-weight: 700;
+    color: #ffffff !important;
+    white-space: nowrap;
+}
+
+.snack-picker-option.out-of-stock {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.snack-picker-empty {
+    padding: 18px;
+    color: #a0a8b8;
+    text-align: center;
+    font-size: 12px;
+}
+
+.snack-native-select {
+    display: none !important;
+}
+
+/* =====================================
+   FIX: MOBILE PROFILE ICON
+===================================== */
+
+.profile-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    padding: 6px 10px !important;
+}
+
+.profile-avatar {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    flex: 0 0 38px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 600px) {
+    .profile-trigger {
+        padding: 5px !important;
+        gap: 0;
+    }
+
+    .profile-avatar {
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        flex-basis: 34px !important;
+    }
+}
