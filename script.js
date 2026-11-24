@@ -734,74 +734,67 @@ function populateSnacks() {
 ===================================== */
 
 function getGamingAmount() {
-  const consoleItem = appData.consoles.find(item =>
-    item.consoleName === $("console").value
-  );
+  const price = Number($("gamingPrice").value);
 
-  if (!consoleItem) return 0;
+  if (!Number.isFinite(price) || price < 0) {
+    return 0;
+  }
 
-  const consoleType = consoleItem.consoleType;
-  const players = $("players").value;
-  const duration = Number($("duration").value);
-
-  const exactPrice = appData.prices.find(item =>
-    item.consoleType === consoleType &&
-    item.players === players &&
-    item.durationMinutes === duration
-  );
-
-  if (exactPrice) return exactPrice.price;
-
-  const hourlyPrice = appData.prices.find(item =>
-    item.consoleType === consoleType &&
-    item.players === players &&
-    item.durationMinutes === 60
-  );
-
-  if (!hourlyPrice) return 0;
-
-  return Math.round(
-    hourlyPrice.price * duration / 60
-  );
+  return price;
 }
 
 
 /* =====================================
-   END TIME
+   AUTOMATIC END TIME
 ===================================== */
 
 function updateEndTime() {
   const startTime = $("startTime").value;
   const duration = Number($("duration").value);
+  const endTimeInput = $("endTime");
 
-  if (!startTime) {
-    $("endTime").value = "";
+  if (!startTime || !Number.isFinite(duration)) {
+    endTimeInput.value = "";
     updateBill();
     return;
   }
 
-  const parts = startTime.split(":").map(Number);
+  const [hours, minutes] = startTime.split(":").map(Number);
 
-  const totalMinutes =
-    parts[0] * 60 + parts[1] + duration;
-
-  if (totalMinutes > 24 * 60) {
-    $("endTime").value = "";
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 || hours > 23 ||
+    minutes < 0 || minutes > 59
+  ) {
+    endTimeInput.value = "";
     updateBill();
     return;
   }
 
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
+  const totalMinutes = hours * 60 + minutes + duration;
 
-  $("endTime").value =
-    String(hours).padStart(2, "0") +
-    ":" +
-    String(minutes).padStart(2, "0");
+  if (totalMinutes >= 24 * 60) {
+    // Allow overnight sessions and show the next day's time.
+    const nextDayMinutes = totalMinutes % (24 * 60);
+
+    const endHours = Math.floor(nextDayMinutes / 60);
+    const endMinutes = nextDayMinutes % 60;
+
+    endTimeInput.value =
+      String(endHours).padStart(2, "0") + ":" +
+      String(endMinutes).padStart(2, "0");
+  } else {
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+
+    endTimeInput.value =
+      String(endHours).padStart(2, "0") + ":" +
+      String(endMinutes).padStart(2, "0");
+  }
 
   updateBill();
 }
-
 
 /* =====================================
    SNACK MANAGEMENT
@@ -987,6 +980,7 @@ $("bookingForm").addEventListener("submit", async event => {
       .filter(item => item.snackId && item.quantity > 0);
 
     // STEP 2: Create the gaming session.
+    
     const result = await apiRequest({
       action: "startSession",
       token: sessionToken,
@@ -1000,8 +994,12 @@ $("bookingForm").addEventListener("submit", async event => {
       durationMinutes: Number($("duration").value),
 
       consoleName: $("console").value,
-      players: $("players").value
+      players: $("players").value,
+
+      // Send the manually entered gaming price
+      gamingAmount: $("gamingPrice").value
     });
+
 
     // STEP 3: Add snacks to the newly created session.
     let snackError = "";
@@ -1069,8 +1067,10 @@ $("bookingForm").addEventListener("submit", async event => {
 [
   "console",
   "players",
-  "duration"
+  "duration",
+  "gamingPrice"
 ].forEach(id => {
+  $(id).addEventListener("input", updateBill);
   $(id).addEventListener("change", updateBill);
 });
 
@@ -1078,6 +1078,7 @@ $("bookingForm").addEventListener("submit", async event => {
   "startTime",
   "duration"
 ].forEach(id => {
+  $(id).addEventListener("input", updateEndTime);
   $(id).addEventListener("change", updateEndTime);
 });
 

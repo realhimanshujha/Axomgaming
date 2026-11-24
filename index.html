@@ -201,8 +201,11 @@
 
             <div class="field">
               <label for="startTime">Starting Time *</label>
-              <input id="startTime" type="time"
-                     min="10:00" max="21:30" required>
+              <input
+                id="startTime"
+                type="time"
+                required
+              >
             </div>
 
             <div class="field">
@@ -240,6 +243,18 @@
                 <option value="Trio">Trio</option>
                 <option value="Quad">Quad</option>
               </select>
+            </div>
+
+            <div class="field">
+              <label for="gamingPrice">Gaming Price (₹) *</label>
+              <input
+                id="gamingPrice"
+                type="number"
+                min="0"
+                step="0.01"
+                value="150"
+                required
+              >
             </div>
 
           </div>
