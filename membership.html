@@ -116,13 +116,12 @@
     </section>
     <footer>AXOM GAMING <span>•</span> Train Hard. Play Better.</footer>
   </main>
-  <script src="membership.js"></script>
+  <script src="membership.js?v=3"></script>
 
 <script>
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./service-worker.js")
-        .catch(error => console.error("AXOM app offline setup failed:", error));
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => registration.unregister());
     });
   }
 </script>

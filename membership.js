@@ -40,29 +40,122 @@ function prettyDate(value) {
   const d = new Date(`${value}T00:00:00`);
   return isNaN(d) ? value : d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
 }
+
 function renderMembers() {
   const q = $("searchMembers").value.trim().toLowerCase();
-  const filtered = memberData.filter(m => [m.name,m.phone,m.memberId,m.email].some(v => String(v||"").toLowerCase().includes(q)));
-  $("membersBody").innerHTML = filtered.length ? filtered.map(m => {
-    const statusClass = m.status === "Active" ? "" : m.status === "Expired" || m.status === "Hours Exhausted" ? "expired" : "inactive";
-    return `<tr><td><div class="member-name">${esc(m.name)}</div><div class="member-sub">${esc(m.memberId)} · ${esc(m.phone)}</div></td><td>${esc(m.planName)}</td><td>${formatHours(m.usedHours)}</td><td class="hours">${formatHours(m.remainingHours)}</td><td>${formatHours(m.usedToday)}</td><td>${prettyDate(m.expiryDate)}</td><td><span class="status ${statusClass}">${esc(m.status)}</span></td></tr>`;
-  }).join("") : `<tr><td colspan="7" class="empty">No members found.</td></tr>`;
+
+  const filtered = memberData.filter(m =>
+    [m.name, m.phone, m.memberId, m.email]
+      .some(v => String(v || "").toLowerCase().includes(q))
+  );
+
+  $("membersBody").innerHTML = filtered.length
+    ? filtered.map(m => {
+        const statusClass =
+          m.status === "Active" ? "" :
+          m.status === "Expired" || m.status === "Hours Exhausted"
+            ? "expired" : "inactive";
+
+        return `<tr>
+          <td>
+            <div class="member-name">${esc(m.name)}</div>
+            <div class="member-sub">${esc(m.memberId)} · ${esc(m.phone)}</div>
+          </td>
+          <td>${esc(m.planName)}</td>
+          <td>${formatHours(m.usedHours)}</td>
+          <td class="hours">${formatHours(m.remainingHours)}</td>
+          <td>${formatHours(m.usedToday)}</td>
+          <td>${prettyDate(m.expiryDate)}</td>
+          <td><span class="status ${statusClass}">${esc(m.status)}</span></td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="7" class="empty">No members found.</td></tr>`;
+
   const active = memberData.filter(m => m.status === "Active");
+
   $("statMembers").textContent = memberData.length;
   $("statActive").textContent = active.length;
-  $("statHours").textContent = formatHours(active.reduce((sum,m) => sum + Number(m.remainingHours||0),0));
+  $("statHours").textContent = formatHours(
+    active.reduce((sum, m) => sum + Number(m.remainingHours || 0), 0)
+  );
+
+  // Booking dropdown
   const current = $("memberSelect").value;
-  $("memberSelect").innerHTML = `<option value="">Choose a member…</option>` + memberData.map(m =>
-    `<option value="${esc(m.memberId)}" ${m.memberId===current?"selected":""}>${esc(m.name)} — ${esc(m.memberId)} (${formatHours(m.remainingHours)} left · ${esc(m.status)})</option>`
-  ).join("");
+
+  $("memberSelect").innerHTML =
+    `<option value="">Choose a member…</option>` +
+    memberData.map(m => `
+      <option value="${esc(m.memberId)}"
+        ${m.memberId === current ? "selected" : ""}>
+        ${esc(m.name)} — ${esc(m.memberId)}
+        (${formatHours(m.remainingHours)} left · ${esc(m.status)})
+      </option>
+    `).join("");
+
+  // Renewal dropdown
+  const renewalSelect = $("renewalMemberSelect");
+  const renewalCurrent = renewalSelect.value;
+
+  renewalSelect.innerHTML =
+    `<option value="">Choose a member…</option>` +
+    memberData.map(m => `
+      <option value="${esc(m.memberId)}"
+        ${m.memberId === renewalCurrent ? "selected" : ""}>
+        ${esc(m.name)} — ${esc(m.memberId)}
+        (${formatHours(m.remainingHours)} left · ${esc(m.status)})
+      </option>
+    `).join("");
+
   updateMemberCard();
+  updateRenewalMemberCard();
 }
+
+
+
 function updateMemberCard() {
   const m = memberData.find(x => x.memberId === $("memberSelect").value);
   if (!m) {$("memberCard").innerHTML = "<span>Select a member to see their balance.</span>"; return;}
   $("memberCard").innerHTML = `<div><strong>${esc(m.name)}</strong> · ${esc(m.memberId)}<br>${esc(m.email)} · ${esc(m.phone)}</div><div class="balance">${formatHours(m.remainingHours)} remaining</div><div>Total ${formatHours(m.totalHours)} · Used ${formatHours(m.usedHours)} · Used today ${formatHours(m.usedToday)}<br>Expires ${prettyDate(m.expiryDate)} · Max ${m.maxPlayers} player(s) · ${esc(m.status)}</div>`;
   $("playersSelect").innerHTML = Array.from({length:Math.max(1,Math.min(4,Number(m.maxPlayers)||2))},(_,i)=>`<option value="${i+1}">${i+1} player${i===0?"":"s"}</option>`).join("");
 }
+
+function updateRenewalMemberCard() {
+  const select = $("renewalMemberSelect");
+  const card = $("renewalMemberCard");
+
+  if (!select || !card) return;
+
+  const member = memberData.find(
+    m => String(m.memberId) === String(select.value)
+  );
+
+  if (!member) {
+    card.innerHTML =
+      "<span>Select an existing member to view their current membership.</span>";
+    return;
+  }
+
+  card.innerHTML = `
+    <div>
+      <strong>${esc(member.name)}</strong>
+      <span>${esc(member.memberId)} · ${esc(member.phone)}</span>
+    </div>
+    <div>
+      <strong>${formatHours(member.remainingHours)}</strong>
+      <span>Hours remaining</span>
+    </div>
+    <div>
+      <strong>${esc(member.status)}</strong>
+      <span>Current status</span>
+    </div>
+    <div>
+      <strong>${prettyDate(member.expiryDate)}</strong>
+      <span>Expiry date</span>
+    </div>
+  `;
+}
+
+
 function updateSummary() {
   const mins = Number($("bookingForm").durationMinutes.value || 60);
   const start = $("bookingForm").startTime.value || "16:00";
@@ -125,6 +218,7 @@ $("bookingForm").addEventListener("submit", async event => {
 $("refreshBtn").addEventListener("click",refresh);
 $("searchMembers").addEventListener("input",renderMembers);
 $("memberSelect").addEventListener("change",updateMemberCard);
+$("renewalMemberSelect").addEventListener("change",updateRenewalMemberCard);
 $("bookingForm").durationMinutes.addEventListener("change",updateSummary);
 $("bookingForm").startTime.addEventListener("input",updateSummary);
 // ALLOW BOOKINGS FROM YESTERDAY ONWARD
@@ -142,3 +236,51 @@ $("bookingDate").min = yesterday;
 $("bookingDate").value = localToday;
 updateSummary();
 refresh();
+
+
+const renewalForm = $("renewalForm");
+
+if (renewalForm) {
+  renewalForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    hideNotice();
+
+    const button = renewalForm.querySelector(
+      'button[type="submit"]'
+    );
+
+    const values = Object.fromEntries(
+      new FormData(renewalForm).entries()
+    );
+
+    values.pricePaid = Number(values.pricePaid);
+    values.totalHours = Number(values.totalHours);
+    values.validityDays = Number(values.validityDays);
+    values.maxPlayers = Number(values.maxPlayers);
+
+    button.disabled = true;
+    button.textContent = "Renewing membership…";
+
+    try {
+      const result = await api("renewMember", values);
+
+      notice(
+        `${result.message} Renewal ID: ${result.renewalId}. ` +
+        `Remaining balance: ${formatHours(result.remainingHours)}.` +
+        (result.emailStatus !== "Sent"
+          ? ` Email status: ${result.emailStatus}`
+          : "")
+      );
+
+      renewalForm.reset();
+
+      await refresh();
+
+    } catch (e) {
+      notice(e.message, true);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Renew Membership";
+    }
+  });
+}
