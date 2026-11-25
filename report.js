@@ -67,6 +67,16 @@ async function loadReport() {
     set("grossGamingSales", money(d.grossGamingSales));
     set("totalDiscount", money(d.totalDiscount));
     set("snackSales", money(d.snackSales));
+
+    set("membershipRevenue", money(d.membershipRevenue));
+    set("totalRevenue", money(d.totalRevenue));
+
+    set("newMembershipRevenue", money(d.newMembershipRevenue));
+    set("renewalRevenue", money(d.renewalRevenue));
+
+    set("newMembershipCount", d.newMembershipCount || 0);
+    set("renewalCount", d.renewalCount || 0);
+
     set("totalDues", money(d.totalDues));
 
     set("cashCollected", money(d.cashCollected));
@@ -88,12 +98,14 @@ async function loadReport() {
           <td>${x.date}</td>
           <td>${money(x.gamingSales)}</td>
           <td>${money(x.snackSales)}</td>
+          <td>${money(x.membershipRevenue)}</td>
           <td><b>${money(x.totalSales)}</b></td>
+          <td><b>${money(x.totalRevenue)}</b></td>
           <td>${x.sessions}</td>
         </tr>
       `).join("")
 
-      : '<tr><td colspan="5" class="empty">No sales recorded for this month.</td></tr>';
+      : '<tr><td colspan="7" class="empty">No sales recorded for this month.</td></tr>';
 
     $("notice").classList.add("hidden");
 
